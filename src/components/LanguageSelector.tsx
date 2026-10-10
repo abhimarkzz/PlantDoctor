@@ -39,36 +39,34 @@ export function LanguageSelector({ className = '', variant = 'pill' }: LanguageS
       role="group"
       aria-label={t.chooseLanguage}
       data-testid="language-selector-pills"
-      className={`flex flex-wrap items-center gap-2 ${className}`}
+      className={`w-full sm:w-auto ${className}`}
     >
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-1">
-        <Globe size={16} className="text-primary" aria-hidden="true" />
-        <span className="hidden sm:inline">{t.selectLanguage}:</span>
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-2 sm:mb-0 sm:inline-flex sm:mr-2.5">
+        <Globe size={15} className="text-primary shrink-0" aria-hidden="true" />
+        <span>{t.selectLanguage}:</span>
       </div>
-      {availableLanguages.map((lang) => {
-        const isSelected = language === lang.code;
-        return (
-          <button
-            key={lang.code}
-            type="button"
-            onClick={() => setLanguage(lang.code)}
-            aria-pressed={isSelected}
-            data-testid={`lang-btn-${lang.code}`}
-            className={`min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              isSelected
-                ? 'bg-primary text-on-primary shadow-sm ring-2 ring-primary/30'
-                : 'bg-card border border-border text-foreground hover:bg-muted/80'
-            }`}
-          >
-            <span>{lang.nativeName}</span>
-            {lang.code !== 'en' && (
-              <span className={`text-[11px] font-normal ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                ({lang.name})
-              </span>
-            )}
-          </button>
-        );
-      })}
+      <div className="grid grid-cols-2 sm:inline-flex sm:flex-wrap items-center gap-2">
+        {availableLanguages.map((lang) => {
+          const isSelected = language === lang.code;
+          return (
+            <button
+              key={lang.code}
+              type="button"
+              onClick={() => setLanguage(lang.code)}
+              aria-pressed={isSelected}
+              aria-label={`${lang.nativeName} (${lang.name})`}
+              data-testid={`lang-btn-${lang.code}`}
+              className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center justify-center text-center whitespace-nowrap ${
+                isSelected
+                  ? 'bg-primary text-on-primary shadow-sm ring-2 ring-primary/30'
+                  : 'bg-card border border-border text-foreground hover:bg-muted/80'
+              }`}
+            >
+              <span>{lang.nativeName}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -78,7 +78,7 @@ export function HomePage() {
     <div className="space-y-8 md:space-y-10">
       {/* Header with Title and Language Selector */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary/10">
               <Leaf size={28} className="text-primary" aria-hidden="true" />
