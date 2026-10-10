@@ -6,6 +6,7 @@ import {
   listKnowledgePacks,
   getKnowledgePack,
   downloadKnowledgePackPayload,
+  DeviceOfflineError,
 } from '../api/client';
 import {
   listInstalledPacks,
@@ -25,6 +26,10 @@ export const liveService: PlantDoctorService = {
 
   async ask(question: Question, image?: File): Promise<AnswerResult> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const installed = await listInstalledPacks().catch(() => []);
+      if (installed.length === 0) {
+        throw new DeviceOfflineError('Device is offline and no knowledge packs are installed.');
+      }
       return searchOffline(question.query, question.cropId, question.regionId);
     }
     return askQuestion(question.query, {

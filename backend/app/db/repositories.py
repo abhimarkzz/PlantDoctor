@@ -173,6 +173,15 @@ class EvaluationCaseRepository(BaseRepository):
             self._memory_store[case.case_id] = doc
         return case
 
+    def get_by_id(self, case_id: str) -> Optional[EvaluationCaseRecord]:
+        if self.is_connected:
+            col = self.get_collection()
+            doc = col.find_one({"case_id": case_id})
+            return EvaluationCaseRecord.model_validate(doc) if doc else None
+        else:
+            doc = self._memory_store.get(case_id)
+            return EvaluationCaseRecord.model_validate(doc) if doc else None
+
     def list_all(self) -> List[EvaluationCaseRecord]:
         if self.is_connected:
             col = self.get_collection()
@@ -180,3 +189,8 @@ class EvaluationCaseRepository(BaseRepository):
             return [EvaluationCaseRecord.model_validate(d) for d in docs]
         else:
             return [EvaluationCaseRecord.model_validate(d) for d in self._memory_store.values()]
+
+    def count(self) -> int:
+        if self.is_connected:
+            return self.get_collection().count_documents({})
+        return len(self._memory_store)

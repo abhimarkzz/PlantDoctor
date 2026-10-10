@@ -86,8 +86,8 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 | Command | Description | Status |
 |---------|-------------|--------|
-| `PYTHONPATH=. .venv/bin/pytest backend/tests -v` | Run all 17 backend unit and benchmark tests | ✅ 17/17 Passed |
-| `npm test` | Run all 32 frontend Vitest component tests | ✅ 32/32 Passed |
+| `PYTHONPATH=. .venv/bin/pytest backend/tests -v` | Backend tests (in-memory services; 1 live-Atlas smoke) | ✅ 33/33 Passed |
+| `npm test` | Run all frontend Vitest tests | ✅ 38/38 Passed |
 | `npm run typecheck` | Strict TypeScript typecheck (`tsc -b`) | ✅ 0 Errors |
 | `npm run lint` | Fast linter (`oxlint`) | ✅ 0 Errors |
 | `npm run build` | Compile PWA production bundle with Workbox | ✅ Built (~467 KiB) |
@@ -97,12 +97,78 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## Measured Benchmark Results
 
-Ran on verified agricultural reference corpus:
-- **Vector-only Retrieval:** Recall@5 = **100.00%**, Avg Latency = **6.63 ms**, Applicability Violations = **1** (cross-crop violation).
-- **Hybrid Retrieval (Vector + Keyword RRF):** Recall@5 = **100.00%**, Avg Latency = **7.08 ms**, Applicability Violations = **1**.
-- **Hybrid + Evidence Status Gate:** Recall@5 = **100.00%**, Abstentions = **1**, Applicability Violations = **0** (Hard mismatches deterministically rejected).
+Run via `PYTHONPATH=. .venv/bin/python backend/run_benchmark.py` against **live MongoDB Atlas `$vectorSearch`**, over **N = 5** cases from the Atlas `evaluation_cases` collection. A 5-case set validates the pipeline; it is **not** proof of general agricultural accuracy.
+
+- **Vector-only Retrieval:** Recall@5 = **100.0%**, Citations = **100.0%**, Applicability Violations = **0**, Avg Latency ≈ **398 ms**.
+- **Hybrid Retrieval (RRF):** Recall@5 = **100.0%**, Citations = **100.0%**, Applicability Violations = **0**, Avg Latency ≈ **569 ms**.
+- **Hybrid + Evidence Status Gate:** Recall@5 = **100.0%**, Applicability Violations = **0**, Hard-mismatch abstentions = **1/1**, Avg Latency ≈ **340 ms**.
+
+Latencies reflect live Atlas round-trips (not local cosine). Re-run the command to reproduce.
 
 ---
+
+## Progressive Web App (PWA) & Offline Shell
+
+Plant Doctor is installable as a PWA. **This phase provides offline access to the
+application shell only** — the UI reopens without a network connection once the
+browser has cached it. It does **not** mean agricultural questions can be answered
+offline: live question answering, library sync, and pack downloads all require a
+network connection and a running backend.
+
+### Install on Android (Chrome / Edge)
+1. Open the deployed site in Chrome.
+2. Tap the **⋮** menu → **Install app** (or **Add to Home screen**).
+3. Confirm. The app launches standalone from your home screen.
+   - The in-app **Install App (PWA)** button triggers the same native prompt when the browser offers it.
+
+### Install on iPhone / iPad (Safari)
+1. Open the deployed site in **Safari** (iOS only installs PWAs from Safari).
+2. Tap the **Share** icon → **Add to Home Screen**.
+3. Tap **Add**. The app launches standalone with the Plant Doctor icon.
+
+### What works offline vs. what does not
+| Works offline (after first load) | Requires network |
+|----------------------------------|------------------|
+| App shell, navigation, all pages | Live question answering (backend) |
+| Cached static assets, icons, fonts | Knowledge-pack download & library sync |
+| Accurate online/offline indicator | Cloud retrieval / generation |
+
+When offline, the app shows an offline indicator and will **not** attempt to contact
+the backend or any cloud service. No pack download reports success unless a real
+pack is downloaded and stored.
+
+### PWA verification results (actual)
+
+Verified against the production build (`npm run build` + `npm run preview`, port 4173):
+
+- ✅ **Manifest** loads and parses: name, short_name, `display: standalone`,
+  `start_url: /`, theme `#15803D`, background `#F0FDF4`, 5 icons (incl. maskable
+  + 180×180 apple-touch). Verified in-browser via `fetch`.
+- ✅ **Icons** — all referenced icon files return HTTP 200 (no missing references).
+- ✅ **Service worker (static config)** — generated `dist/sw.js` precaches the app
+  shell (19 entries: `index.html`, JS, CSS, manifest, icons) and registers a
+  `NavigationRoute` bound to `index.html`, so an offline refresh on any route
+  serves the cached shell.
+- ✅ **Safe caching** — `sw.js` contains **0** references to the API origin; only
+  static assets and Google Fonts are cached. No authenticated/evidence responses
+  are persisted by the service worker.
+- ⚠️ **Live SW registration / offline refresh** could **not** be verified in the
+  built-in automation browser: it exposes the `serviceWorker` API but blocks
+  script registration (`register('/sw.js')` throws "unknown error fetching the
+  script" even though the file serves with HTTP 200 and `Content-Type:
+  text/javascript`). Verify these manually in a real browser (steps below).
+
+### Manual verification (Chrome DevTools)
+1. `npm run build && npm run preview` → open `http://localhost:4173/` in Chrome.
+2. **DevTools → Application → Manifest**: confirm name, icons, theme, standalone.
+3. **Application → Service Workers**: confirm `sw.js` is "activated and running".
+4. **Application → Cache Storage**: confirm a `workbox-precache` cache holds
+   `index.html`, the JS/CSS bundles, manifest, and icons.
+5. **Offline refresh**: tick **Network → Offline**, then reload — the app shell
+   should still load, and the offline indicator should appear.
+6. **Indicator**: toggle Offline/Online and confirm the status badge flips.
+7. **Missing resource**: in Offline mode, trigger a backend call (Ask) — it should
+   fail gracefully with the "device offline / backend unavailable" state, not hang.
 
 ## Production Deployment Checklist
 

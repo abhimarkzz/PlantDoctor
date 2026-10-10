@@ -10,7 +10,10 @@ from backend.app.db.repositories import (
     SourceRepository,
     EvidenceChunkRepository,
     KnowledgePackRepository,
+    EvaluationCaseRepository,
 )
+from backend.app.models.schemas import EvaluationCaseRecord
+from backend.app.models.enums import EvidenceStatus
 from backend.app.services.ingestion import IngestionService
 from backend.app.services.pack_service import KnowledgePackService
 from backend.app.db.seed_data import seed_database_corpus
@@ -110,7 +113,69 @@ def main():
     else:
         print(f"  - Atlas already contains {pack_count_before} knowledge packs.")
 
-    # 4. Final summary
+    # 4. Ensure evaluation cases
+    print("\nStep 4: Ensuring evaluation benchmark cases in Atlas...")
+    eval_repo = EvaluationCaseRepository(db)
+    if eval_repo.count() == 0:
+        eval_cases = [
+            EvaluationCaseRecord(
+                case_id="eval-001",
+                query="What causes uniform yellowing of older lower tomato leaves?",
+                crop_id="tomato",
+                region_id="temperate",
+                expected_source_ids=["src-7233dae1"],
+                expected_status=EvidenceStatus.APPLICABLE,
+                expected_abstention=False,
+                notes="Tomato nitrogen deficiency - oldest lower leaves yellow first."
+            ),
+            EvaluationCaseRecord(
+                case_id="eval-002",
+                query="Concentric rings bullseye dark spots on lower tomato leaves",
+                crop_id="tomato",
+                region_id="temperate",
+                expected_source_ids=["src-301141a6"],
+                expected_status=EvidenceStatus.APPLICABLE,
+                expected_abstention=False,
+                notes="Alternaria solani early blight bullseye symptom diagnosis."
+            ),
+            EvaluationCaseRecord(
+                case_id="eval-003",
+                query="Diamond spindle shaped lesions with grey centers in flooded paddy",
+                crop_id="rice",
+                region_id="tropical",
+                expected_source_ids=["src-d77ca02c"],
+                expected_status=EvidenceStatus.APPLICABLE,
+                expected_abstention=False,
+                notes="Magnaporthe oryzae lowland paddy blast lesion diagnosis."
+            ),
+            EvaluationCaseRecord(
+                case_id="eval-004",
+                query="Can I use chemical fungicide spray or organic biocontrol for tomato early blight?",
+                crop_id="tomato",
+                region_id="temperate",
+                expected_source_ids=["src-301141a6", "src-064f83aa"],
+                expected_status=EvidenceStatus.CONFLICTING_EVIDENCE,
+                expected_abstention=False,
+                notes="Conflicting management: USDA conventional copper/chlorothalonil vs NCAT organic bio-control."
+            ),
+            EvaluationCaseRecord(
+                case_id="eval-005",
+                query="Treatment for rice blast foliar burning",
+                crop_id="tomato",
+                region_id="temperate",
+                expected_source_ids=[],
+                expected_status=EvidenceStatus.INSUFFICIENT_EVIDENCE,
+                expected_abstention=True,
+                notes="Hard crop mismatch: asking rice blast treatment in tomato crop context."
+            ),
+        ]
+        for ec in eval_cases:
+            eval_repo.upsert(ec)
+        print(f"  - Seeded {len(eval_cases)} golden evaluation benchmark cases.")
+    else:
+        print(f"  - Atlas already contains {eval_repo.count()} evaluation cases.")
+
+    # 5. Final summary
     print("\n========================================================")
     print("  LIVE ATLAS DATABASE STATUS: POPULATED & READY")
     print("========================================================")
@@ -118,6 +183,7 @@ def main():
     print(f"  Sources:           {source_repo.count()} records")
     print(f"  Evidence Chunks:   {chunk_repo.count()} records (with 384-dim dense vectors)")
     print(f"  Knowledge Packs:   {pack_repo.count()} records")
+    print(f"  Evaluation Cases:  {eval_repo.count()} records")
     print("========================================================\n")
 
     print(get_atlas_vector_search_instructions())

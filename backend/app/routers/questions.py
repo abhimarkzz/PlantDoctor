@@ -1,10 +1,12 @@
 """Questions and diagnostic guidance endpoints."""
 
-from typing import Optional
-from fastapi import APIRouter, Depends, Form, Request, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import ValidationError
 from ..deps import get_answer_service
 from ..models.schemas import AnswerResult, QuestionRequest
 from ..services.answer_service import AnswerService
+
+_INVALID_QUERY_DETAIL = "Invalid request: 'query' must be 3–2000 non-whitespace characters."
 
 router = APIRouter(tags=["Questions"])
 
@@ -29,14 +31,20 @@ async def ask_question(
         region_id = form.get("region_id") or form.get("regionId")
         growth_stage_id = form.get("growth_stage_id") or form.get("growthStageId")
 
-        req = QuestionRequest(
-            query=query,
-            crop_id=str(crop_id) if crop_id else None,
-            region_id=str(region_id) if region_id else None,
-            growth_stage_id=str(growth_stage_id) if growth_stage_id else None,
-        )
+        try:
+            req = QuestionRequest(
+                query=query,
+                crop_id=str(crop_id) if crop_id else None,
+                region_id=str(region_id) if region_id else None,
+                growth_stage_id=str(growth_stage_id) if growth_stage_id else None,
+            )
+        except ValidationError:
+            raise HTTPException(status_code=422, detail=_INVALID_QUERY_DETAIL)
     else:
         body = await request.json()
-        req = QuestionRequest.model_validate(body)
+        try:
+            req = QuestionRequest.model_validate(body)
+        except ValidationError:
+            raise HTTPException(status_code=422, detail=_INVALID_QUERY_DETAIL)
 
     return answer_service.answer_question(req)

@@ -81,6 +81,12 @@ class EvidenceStatusGate:
         for chunk in retrieved_chunks:
             source = sources_by_id.get(chunk.source_id)
 
+            # Check for withdrawn or deprecated source / chunk
+            if (source and source.status in [SourceStatus.WITHDRAWN, SourceStatus.DEPRECATED]) or \
+               (chunk.status in [SourceStatus.WITHDRAWN, SourceStatus.DEPRECATED]):
+                rejected.append((chunk.id, f"Source '{chunk.source_id}' is withdrawn or deprecated"))
+                continue
+
             # Check minimum relevance
             score = chunk.relevance_score if chunk.relevance_score is not None else 0.5
             if score < MIN_RELEVANCE_THRESHOLD:
@@ -107,9 +113,9 @@ class EvidenceStatusGate:
 
                 # If source or chunk is restricted to a different specific region
                 if chunk_region and chunk_region != region_clean and chunk_region != "global":
-                    # Check if regions are mutually exclusive (e.g. tropical vs temperate)
-                    if ("tropical" in chunk_region and "temperate" in region_clean) or \
-                       ("arid" in chunk_region and "humid" in region_clean):
+                    # Check if regions are mutually exclusive (e.g. tropical vs temperate/arid, or arid vs humid/tropical)
+                    if ("tropical" in chunk_region and ("temperate" in region_clean or "arid" in region_clean)) or \
+                       ("arid" in chunk_region and ("humid" in region_clean or "tropical" in region_clean)):
                         rejected.append((chunk.id, f"Hard climatic mismatch: chunk applies to '{chunk_region}', not '{region_clean}'"))
                         continue
 

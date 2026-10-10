@@ -120,6 +120,15 @@ class QuestionRequest(BaseModel):
                 data["query"] = data["question"]
         return data
 
+    @model_validator(mode="after")
+    def _require_meaningful_query(self) -> "QuestionRequest":
+        """Reject whitespace-only or sub-threshold queries after trimming."""
+        stripped = self.query.strip()
+        if len(stripped) < 3:
+            raise ValueError("query must contain at least 3 non-whitespace characters")
+        self.query = stripped
+        return self
+
 
 class AnswerResult(CamelModel):
     id: str

@@ -132,3 +132,14 @@ def test_retrieval_pipeline_benchmark():
     assert vec_recall >= 0.75
     assert hyb_recall >= 0.75
     assert results["hybrid_with_gate"]["abstentions"] >= 1
+
+
+def test_golden_cases_atlas_benchmark():
+    from backend.run_benchmark import run_evaluation_benchmark
+    summary = run_evaluation_benchmark(require_atlas=False)
+    assert summary["total_cases"] >= 5
+    gate_config = summary["configurations"]["hybrid_with_gate"]
+    assert gate_config["recall_at_5"] >= 0.75
+    assert gate_config["hard_applicability_violations"] == 0
+    assert gate_config["citation_support_rate"] == 1.0
+
