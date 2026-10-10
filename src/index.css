@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Lora", Georgia, serif;
+  --font-body: "Raleway", system-ui, sans-serif;
+
+  --color-primary: #15803D;
+  --color-primary-light: #22c55e;
+  --color-primary-dark: #166534;
+  --color-on-primary: #FFFFFF;
+  --color-secondary: #059669;
+  --color-on-secondary: #000000;
+  --color-accent: #D97706;
+  --color-on-accent: #000000;
+  --color-background: #F0FDF4;
+  --color-foreground: #0F172A;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0F172A;
+  --color-muted: #F0F7F3;
+  --color-muted-foreground: #475569;
+  --color-border: #E2EFE7;
+  --color-destructive: #DC2626;
+  --color-on-destructive: #FFFFFF;
+  --color-ring: #15803D;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-info: #3b82f6;
+  --color-info-bg: #dbeafe;
+
+  --color-evidence-applicable: #15803D;
+  --color-evidence-incomplete: #D97706;
+  --color-evidence-conflicting: #DC2626;
+  --color-evidence-unverified: #6366f1;
+  --color-evidence-insufficient: #6b7280;
+}
+
+/* Dark mode tokens */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #0c1a12;
+    --color-foreground: #e2e8f0;
+    --color-card: #162416;
+    --color-card-foreground: #e2e8f0;
+    --color-muted: #1a2e1a;
+    --color-muted-foreground: #94a3b8;
+    --color-border: #2d4a2d;
+    --color-warning-bg: #451a03;
+    --color-info-bg: #1e3a5f;
+  }
+}
+:root[data-theme="dark"] {
+  --color-background: #0c1a12;
+  --color-foreground: #e2e8f0;
+  --color-card: #162416;
+  --color-card-foreground: #e2e8f0;
+  --color-muted: #1a2e1a;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #2d4a2d;
+  --color-warning-bg: #451a03;
+  --color-info-bg: #1e3a5f;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
