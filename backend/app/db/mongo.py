@@ -36,7 +36,7 @@ def get_mongo_client() -> Optional[MongoClient]:
 
 
 def close_mongo_client():
-    """Closes MongoClient connection pool on shutdown."""
+    """Closes MongoClient connection pool on shutdown and resets service singletons."""
     global _client
     if _client is not None:
         try:
@@ -44,6 +44,12 @@ def close_mongo_client():
         except Exception:
             pass
         _client = None
+
+    try:
+        from ..deps import reset_services
+        reset_services()
+    except Exception:
+        pass
 
 
 def get_database() -> Optional[Database]:

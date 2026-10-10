@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from .enums import EvidenceStatus, SourceStatus, KnowledgePackStatus
 
@@ -107,6 +107,16 @@ class QuestionRequest(BaseModel):
     region_id: Optional[str] = Field(default=None, alias="regionId")
     growth_stage_id: Optional[str] = Field(default=None, alias="growthStageId")
     language: Optional[str] = "en"
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_question_alias(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "query" not in data and "question" in data:
+                data["query"] = data["question"]
+        return data
 
 
 class AnswerResult(CamelModel):

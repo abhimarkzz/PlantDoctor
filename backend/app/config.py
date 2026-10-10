@@ -50,6 +50,24 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
+    @field_validator("mongodb_uri", mode="before")
+    @classmethod
+    def sanitize_mongodb_uri(cls, v: Any) -> Optional[str]:
+        if not v or not isinstance(v, str):
+            return v
+        s = v.strip()
+        if "://" in s and "@" in s:
+            import urllib.parse
+            scheme, rest = s.split("://", 1)
+            userinfo, host_and_params = rest.rsplit("@", 1)
+            if ":" in userinfo:
+                username, password = userinfo.split(":", 1)
+                clean_pw = password.strip("<> ")
+                unquoted = urllib.parse.unquote_plus(clean_pw)
+                encoded_pw = urllib.parse.quote_plus(unquoted)
+                return f"{scheme}://{username}:{encoded_pw}@{host_and_params}"
+        return s
+
     @property
     def is_mongodb_configured(self) -> bool:
         return bool(self.mongodb_uri and self.mongodb_uri.strip())

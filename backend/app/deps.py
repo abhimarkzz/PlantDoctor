@@ -31,6 +31,20 @@ _ingestion_service: Optional[IngestionService] = None
 _pack_service: Optional[KnowledgePackService] = None
 
 
+def reset_services():
+    """Resets global service and repository singletons."""
+    global _source_repo, _chunk_repo, _pack_repo, _eval_repo
+    global _retrieval_service, _answer_service, _ingestion_service, _pack_service
+    _source_repo = None
+    _chunk_repo = None
+    _pack_repo = None
+    _eval_repo = None
+    _retrieval_service = None
+    _answer_service = None
+    _ingestion_service = None
+    _pack_service = None
+
+
 def init_services(db: Optional[Database] = None):
     """Initializes repositories and services, and seeds the authentic corpus if empty."""
     global _source_repo, _chunk_repo, _pack_repo, _eval_repo

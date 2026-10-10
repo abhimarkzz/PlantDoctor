@@ -11,15 +11,22 @@ from ..models.schemas import (
     KnowledgePackRecord,
     EvaluationCaseRecord,
 )
+from .mongo import get_database
 
 logger = logging.getLogger("plantdoctor.db.repos")
 
 
 class BaseRepository:
     def __init__(self, db: Optional[Database] = None):
-        self.db = db
+        self._custom_db = db
         # In-memory storage fallback for tests or disconnected environment
         self._memory_store: Dict[str, Dict[str, Any]] = {}
+
+    @property
+    def db(self) -> Optional[Database]:
+        if self._custom_db is not None:
+            return self._custom_db
+        return get_database()
 
     @property
     def is_connected(self) -> bool:

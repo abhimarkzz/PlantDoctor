@@ -6,6 +6,7 @@ from pymongo.database import Database
 
 from ..models.schemas import EvidenceChunkRecord
 from ..db.repositories import EvidenceChunkRepository
+from ..db.mongo import get_database
 from .embeddings import get_embedding_service
 
 logger = logging.getLogger("plantdoctor.retrieval")
@@ -16,8 +17,14 @@ RRF_K = 60  # Standard constant for Reciprocal Rank Fusion
 class RetrievalService:
     def __init__(self, chunk_repo: EvidenceChunkRepository, db: Optional[Database] = None):
         self.chunk_repo = chunk_repo
-        self.db = db
+        self._custom_db = db
         self.embedding_service = get_embedding_service()
+
+    @property
+    def db(self) -> Optional[Database]:
+        if self._custom_db is not None:
+            return self._custom_db
+        return get_database()
 
     def vector_search(
         self,
