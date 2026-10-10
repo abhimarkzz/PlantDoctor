@@ -132,7 +132,7 @@ export function FarmerInputSection({
     }
 
     setValidationError(null);
-    const finalQuery = trimmed || (image ? 'Examine this plant photograph and identify any visible disease, pest, or nutrient deficiency.' : '');
+    const finalQuery = trimmed || (image ? t.defaultPhotoQuery : '');
     onSubmit(finalQuery, image, context);
   }
 
@@ -258,7 +258,7 @@ export function FarmerInputSection({
             onClick={cancelListening}
             className="ml-auto underline cursor-pointer hover:opacity-80"
           >
-            Dismiss
+            {t.dismiss}
           </button>
         </div>
       )}
@@ -343,7 +343,7 @@ export function FarmerInputSection({
             onClick={() => setShowContextOptions((prev) => !prev)}
             className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
           >
-            <span>{showContextOptions ? '▾ Hide Crop & Region' : '▸ Add Crop & Region (Optional)'}</span>
+            <span>{showContextOptions ? t.hideCropRegion : t.addCropRegionOptional}</span>
           </button>
           {showContextOptions && (
             <div className="mt-3 pt-2">

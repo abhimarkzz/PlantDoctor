@@ -78,6 +78,7 @@ export interface EvidenceChunk {
   status: EvidenceStatus;
   relevanceScore: number | null;
   pageOrSection: string | null;
+  translatedExplanation?: string | null;
 }
 
 export interface MultimodalAssessmentResult {
@@ -112,6 +113,7 @@ export interface AnswerResult {
   generatedAt: string;
   isIllustrative: boolean;
   assessment?: MultimodalAssessmentResult;
+  responseLanguage?: string;
 }
 
 /** Knowledge pack for offline use */

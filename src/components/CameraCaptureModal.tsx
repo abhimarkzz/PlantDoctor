@@ -31,7 +31,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
       setCameraError(null);
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error('Camera access is not supported by your browser.');
+          throw new Error(t.cameraNotSupported);
         }
 
         const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -53,11 +53,11 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
       } catch (err: unknown) {
         const error = err as Error;
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          setCameraError('Camera permission was denied. Please allow camera access in browser settings.');
+          setCameraError(t.cameraPermissionDenied);
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-          setCameraError('No camera found on this device.');
+          setCameraError(t.cameraNotFound);
         } else {
-          setCameraError(error.message || 'Could not start camera.');
+          setCameraError(error.message || t.errorGeneric);
         }
       }
     }
@@ -69,7 +69,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
         activeStream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [isOpen, facingMode]);
+  }, [isOpen, facingMode, t]);
 
   function takeSnapshot() {
     if (!videoRef.current) return;
@@ -137,7 +137,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close camera"
+            aria-label={t.cameraClose}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
           >
             <X size={20} aria-hidden="true" />
@@ -151,7 +151,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
               <AlertCircle size={40} className="mx-auto text-destructive" aria-hidden="true" />
               <p className="text-sm text-destructive-foreground font-medium">{cameraError}</p>
               <p className="text-xs text-muted-foreground">
-                You can also use the "Choose Photo" button to select an existing photo from your gallery.
+                {t.cameraGalleryAlternative}
               </p>
             </div>
           ) : (
@@ -175,7 +175,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
             type="button"
             onClick={toggleCamera}
             disabled={Boolean(cameraError)}
-            aria-label="Switch camera"
+            aria-label={t.cameraSwitch}
             className="p-3 rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-40"
           >
             <RefreshCw size={20} aria-hidden="true" />
@@ -185,7 +185,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
             type="button"
             onClick={takeSnapshot}
             disabled={Boolean(cameraError)}
-            aria-label="Take picture"
+            aria-label={t.cameraTakePicture}
             className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-on-primary ring-4 ring-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg disabled:opacity-40"
           >
             <Camera size={28} aria-hidden="true" />
@@ -196,7 +196,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }: CameraCapture
             onClick={onClose}
             className="text-xs font-semibold text-muted-foreground hover:text-foreground px-3 py-2 cursor-pointer"
           >
-            Cancel
+            {t.cameraCancel}
           </button>
         </div>
       </div>

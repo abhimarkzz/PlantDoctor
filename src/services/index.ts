@@ -3,7 +3,7 @@ import { liveService } from './liveService';
 
 export type { PlantDoctorService } from './types';
 export { liveService } from './liveService';
-export { demoService } from './demoService';
+export { demoService, getLocalizedDemoAnswer } from './demoService';
 
 /**
  * The active service adapter.

@@ -101,6 +101,7 @@ class EvidenceChunkOut(CamelModel):
     relevance_score: Optional[float] = Field(default=None, serialization_alias="relevanceScore")
     page_or_section: Optional[str] = Field(default=None, serialization_alias="pageOrSection")
     retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
+    translated_explanation: Optional[str] = Field(default=None, serialization_alias="translatedExplanation")
 
 
 class QuestionRequest(BaseModel):

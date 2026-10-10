@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Info, AlertTriangle } from 'lucide-react';
 import { DEMO_ANSWER } from '../demo/fixtures';
+import { getLocalizedDemoAnswer } from '../services';
 import { EvidenceStatusBadge } from '../components/EvidenceStatusBadge';
 import { SourceCard } from '../components/SourceCard';
 import { IllustrativeBanner } from '../components/IllustrativeBanner';
@@ -12,9 +13,10 @@ import { LanguageSelector } from '../components/LanguageSelector';
 
 export function EvidenceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
-  const result = id === DEMO_ANSWER.id ? DEMO_ANSWER : null;
+  const baseResult = id === DEMO_ANSWER.id ? DEMO_ANSWER : null;
+  const result = baseResult ? getLocalizedDemoAnswer(baseResult, language) : null;
 
   if (!result) {
     return (

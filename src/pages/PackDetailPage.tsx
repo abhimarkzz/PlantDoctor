@@ -113,7 +113,7 @@ export function PackDetailPage() {
         description={t.packNotFoundDesc}
         action={
           <Link to="/library" className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-dark cursor-pointer">
-            Back to Library
+            {t.backToLibrary}
           </Link>
         }
       />
@@ -123,10 +123,10 @@ export function PackDetailPage() {
   const isDownloaded = pack.status === 'downloaded';
 
   const statusLabel: Record<KnowledgePack['status'], string> = {
-    available: 'Available on server',
+    available: t.packStatusAvailable,
     downloading: t.packDownloading,
     downloaded: t.packInstalled,
-    update_available: 'Update available',
+    update_available: t.packStatusUpdateAvailable,
   };
 
   return (
@@ -134,7 +134,7 @@ export function PackDetailPage() {
       <div className="flex items-center justify-between">
         <Link to="/library" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
           <ArrowLeft size={16} aria-hidden="true" />
-          Back to Library
+          {t.backToLibrary}
         </Link>
         <LanguageSelector variant="compact" />
       </div>
@@ -164,7 +164,7 @@ export function PackDetailPage() {
           { icon: Tag, label: t.packVersion, value: `v${pack.version}` },
           { icon: HardDrive, label: t.packSize, value: formatBytes(pack.sizeBytes) },
           { icon: MapPin, label: t.regionLabel, value: pack.region ?? 'Global' },
-          { icon: Download, label: 'Storage', value: statusLabel[pack.status] },
+          { icon: Download, label: t.packStorageStatus, value: statusLabel[pack.status] },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -180,7 +180,7 @@ export function PackDetailPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { icon: Calendar, label: t.packLastUpdated, value: formatTime(pack.lastUpdated) },
-          { icon: RefreshCw, label: 'Last synced', value: formatTime(pack.lastSynced) },
+          { icon: RefreshCw, label: t.packLastSynced, value: formatTime(pack.lastSynced) },
           { icon: ShieldCheck, label: t.packLastVerified, value: formatTime(pack.lastVerified) },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-card p-4">
@@ -208,8 +208,7 @@ export function PackDetailPage() {
       {/* Source count */}
       <div className="rounded-xl bg-muted p-4">
         <p className="text-sm text-muted-foreground">
-          This pack bundles <strong className="text-foreground">{pack.sourceCount} verified source documents</strong> and passages.
-          When installed, its passages can be queried directly from your device without network connectivity.
+          {t.packBundlesNote} ({pack.sourceCount} {t.packSourcesCount}).
         </p>
       </div>
 
@@ -219,7 +218,7 @@ export function PackDetailPage() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200 text-sm font-medium">
               <CheckCircle2 size={18} aria-hidden="true" />
-              Pack is stored in IndexedDB and available offline
+              {t.packStoredOfflineNotice}
             </div>
             <div>
               <button
@@ -233,7 +232,7 @@ export function PackDetailPage() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Removing the pack frees browser storage. You can reinstall it anytime from the server.
+              {t.packRemoveStorageNote}
             </p>
           </div>
         ) : (
@@ -252,18 +251,17 @@ export function PackDetailPage() {
               ) : (
                 <>
                   <Download size={18} aria-hidden="true" />
-                  Download for offline use
+                  {t.downloadForOfflineUse}
                 </>
               )}
             </button>
             {isDemo ? (
               <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                Not available in this milestone for illustrative previews. Real packs from the connected backend can be downloaded into IndexedDB.
+                {t.packDownloadDemoNote}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                Downloads the complete manifest, verified sources, and text chunks directly into local IndexedDB storage.
-                Integrity is verified via SHA-256 before persistence.
+                {t.packDownloadDesc}
               </p>
             )}
           </div>
@@ -274,12 +272,12 @@ export function PackDetailPage() {
       <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-5 text-amber-950 dark:text-amber-100">
         <h2 className="font-heading text-base font-semibold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
           <AlertTriangle size={18} className="text-amber-700 dark:text-amber-400" aria-hidden="true" />
-          Known offline limitations
+          {t.packKnownLimitations}
         </h2>
         <ul className="text-sm text-amber-900 dark:text-amber-200 space-y-1.5">
-          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Offline evidence is as current as the last successful synchronization ({formatTime(pack.lastSynced)}).</li>
-          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Cloud models and live database vectors require connectivity; offline answers use deterministic passage matching.</li>
-          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Always confirm chemical regulations with local agricultural authorities before application.</li>
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>{t.packLimitSync} ({formatTime(pack.lastSynced)}).</li>
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>{t.packLimitVectors}</li>
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>{t.packLimitRegulations}</li>
         </ul>
       </div>
     </div>

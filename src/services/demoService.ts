@@ -227,7 +227,7 @@ export const demoService: PlantDoctorService = {
       }
     }
 
-    return {
+    const result: AnswerResult = {
       ...DEMO_ANSWER,
       id: DEMO_ANSWER.id,
       query: question.query,
@@ -237,12 +237,17 @@ export const demoService: PlantDoctorService = {
       assessment,
       isIllustrative: true,
       generatedAt: new Date().toISOString(),
+      responseLanguage: lang,
     };
+
+    return getLocalizedDemoAnswer(result, lang as any);
   },
 
-  async getAnswer(id: string): Promise<AnswerResult> {
+  async getAnswer(id: string, language: string = 'en'): Promise<AnswerResult> {
     await delay(200);
-    if (id === DEMO_ANSWER.id) return { ...DEMO_ANSWER, generatedAt: new Date().toISOString() };
+    if (id === DEMO_ANSWER.id) {
+      return getLocalizedDemoAnswer(DEMO_ANSWER, language as any);
+    }
     throw new BackendUnavailableError();
   },
 
@@ -258,3 +263,102 @@ export const demoService: PlantDoctorService = {
     return pack;
   },
 };
+
+export function getLocalizedDemoAnswer(
+  baseAnswer: AnswerResult,
+  lang: string = 'en'
+): AnswerResult {
+  const language = (lang || 'en').toLowerCase().slice(0, 2);
+  let summary = DEMO_SUMMARIES[language] || baseAnswer.summary || DEMO_SUMMARIES.en;
+
+  // Preserve and adapt context notes if present on baseAnswer
+  if (baseAnswer.summary) {
+    if (
+      baseAnswer.summary.includes('No crop/region context') ||
+      baseAnswer.summary.includes('कोई फसल या क्षेत्र संदर्भ') ||
+      baseAnswer.summary.includes('పంట లేదా ప్రాంతీయ సందర్భం') ||
+      baseAnswer.summary.includes('பயிர் அல்லது பிராந்திய சூழல்')
+    ) {
+      if (language === 'hi') {
+        summary = `${DEMO_SUMMARIES.hi} कोई फसल या क्षेत्र संदर्भ प्रदान नहीं किया गया (No crop/region context), जिससे प्रयोज्यता सीमित हो जाती है।`;
+      } else if (language === 'te') {
+        summary = `${DEMO_SUMMARIES.te} పంట లేదా ప్రాంతీయ సందర్భం అందించబడలేదు (No crop/region context), ఇది వర్తింపును పరిమితం చేస్తుంది.`;
+      } else if (language === 'ta') {
+        summary = `${DEMO_SUMMARIES.ta} பயிர் அல்லது பிராந்திய சூழல் வழங்கப்படவில்லை (No crop/region context), ఇది பொருந்தக்கூடிய தன்மையை கட்டுப்படுத்துகிறது.`;
+      } else {
+        summary = `${DEMO_SUMMARIES.en} No crop/region context was provided, which limits applicability.`;
+      }
+    } else if (
+      baseAnswer.summary.includes('Context provided:') ||
+      baseAnswer.summary.includes('प्रदान किया गया संदर्भ:') ||
+      baseAnswer.summary.includes('అందించిన సందర్భం:') ||
+      baseAnswer.summary.includes('வழங்கப்பட்ட சூழல்:')
+    ) {
+      const match = baseAnswer.summary.match(/(?:Context provided:|प्रदान किया गया संदर्भ:|అందించిన సందర్భం:|வழங்கப்பட்ட சூழல்:)\s*([^.]+)/i);
+      const bits = match ? match[1].trim() : 'Tomato, Tropical, Fruiting';
+      if (language === 'hi') {
+        summary = `${DEMO_SUMMARIES.hi} प्रदान किया गया संदर्भ: ${bits}।`;
+      } else if (language === 'te') {
+        summary = `${DEMO_SUMMARIES.te} అందించిన సందర్భం: ${bits}.`;
+      } else if (language === 'ta') {
+        summary = `${DEMO_SUMMARIES.ta} வழங்கப்பட்ட சூழல்: ${bits}.`;
+      } else {
+        summary = `${DEMO_SUMMARIES.en} Context provided: ${bits}.`;
+      }
+    }
+  }
+
+  const caveats = DEMO_CAVEATS[language] || baseAnswer.caveats || DEMO_CAVEATS.en;
+  const assessment = DEMO_ASSESSMENTS[language] || baseAnswer.assessment || DEMO_ASSESSMENTS.en;
+
+  // Localize chunk explanations
+  const evidenceChunks = (baseAnswer.evidenceChunks || DEMO_ANSWER.evidenceChunks).map((chunk) => {
+    let explanation: string | null = null;
+    if (chunk.id === 'chunk-demo-001') {
+      if (language === 'hi') {
+        explanation = 'नाइट्रोजन की कमी में सबसे पहले पुरानी निचली पत्तियां एकसमान रूप से पीली पड़ने लगती हैं और धीरे-धीरे ऊपर की ओर बढ़ती हैं। लौह (आयरन) की कमी में नई पत्तियों की नसों के बीच का हिस्सा पीला पड़ता है जबकि नसें हरी रहती हैं।';
+      } else if (language === 'te') {
+        explanation = 'నత్రజని లోపం వల్ల మొదట పాత దిగువ ఆకులు ఏకరూపంలో పసుపు రంగులోకి మారి క్రమంగా పైకి వ్యాపిస్తాయి. ఇనుము లోపం వల్ల పై లేత ఆకుల ఈనెల మధ్య భాగం పసుపు రంగులోకి మారుతుంది, ఈనెలు ఆకుపచ్చగానే ఉంటాయి.';
+      } else if (language === 'ta') {
+        explanation = 'தழைச்சத்து (நைட்ரஜன்) பற்றாக்குறையின் போது முதலில் முதிர்ந்த கீழ் இலைகள் சீராக மஞ்சள் நிறமாக மாறி படிப்படியாக மேல்நோக்கிப் பரவும். இரும்புச்சத்து குறைபாட்டின் போது இளம் இலைகளின் நரம்புகளுக்கு இடைப்பட்ட பகுதி மஞ்சளாகவும் நரம்புகள் பச்சையாகவும் இருக்கும்.';
+      } else {
+        explanation = 'Nitrogen deficiency begins as uniform yellowing of older lower foliage; iron deficiency presents interveinal chlorosis on terminal growth.';
+      }
+    } else if (chunk.id === 'chunk-demo-002') {
+      if (language === 'hi') {
+        explanation = 'फ्यूजेरियम और वर्टिसिलियम विल्ट से पत्तियां पीली होती हैं, जो प्रायः पौधे के एक हिस्से या व्यक्तिगत शाखाओं को पहले प्रभावित करती हैं।';
+      } else if (language === 'te') {
+        explanation = 'ఫ్యుసేరియం మరియు వర్టిసిలియం విల్ట్ వల్ల ఆకులు పసుపు రంగులోకి మారతాయి, ఇది మొదట మొక్క యొక్క ఒక వైపు భాగాన్ని మాత్రమే ప్రభావితం చేస్తుంది.';
+      } else if (language === 'ta') {
+        explanation = 'பியூசேரியம் மற்றும் வெர்டிசிலியம் வாடல் ஆகியவை இலைகள் மஞ்சளாவதற்கு காரணமாகின்றன, இது பொதுவாக முதலில் செடியின் ஒரு பகுதியை மட்டுமே தாக்கும்.';
+      } else {
+        explanation = 'Fusarium and Verticillium vascular wilts cause foliar chlorosis typically isolated to unilateral plant sections.';
+      }
+    } else if (chunk.id === 'chunk-demo-003') {
+      if (language === 'hi') {
+        explanation = 'मिट्टी में अत्यधिक जलभराव से जड़ों में ऑक्सीजन की कमी हो जाती है, जिससे पत्तियों में पीलापन और जड़ सड़न की समस्या आती है।';
+      } else if (language === 'te') {
+        explanation = 'నేలలో అధిక తేమ వేర్లకు ఆక్సిజన్ అందకుండా చేస్తుంది, దీనివల్ల ఆకులు పసుపు రంగులోకి మారి వేరు కుళ్లు తెగులు వచ్చే ప్రమాదం ఉంది.';
+      } else if (language === 'ta') {
+        explanation = 'அதிகப்படியான மண் ஈரப்பதம் வேர்களின் ஆக்சிஜன் ஏற்பைக் குறைத்து, இலைகள் மஞ்சளாகவும் வேர் அழுகவும் வழிவகுக்கிறது.';
+      } else {
+        explanation = 'Excessive soil moisture impairs root aeration, precipitating generalized chlorosis and potential root necrosis.';
+      }
+    }
+
+    return {
+      ...chunk,
+      translatedExplanation: explanation ?? chunk.translatedExplanation,
+    };
+  });
+
+  return {
+    ...baseAnswer,
+    summary,
+    caveats,
+    assessment,
+    evidenceChunks,
+    responseLanguage: language,
+    generatedAt: baseAnswer.generatedAt || new Date().toISOString(),
+  };
+}

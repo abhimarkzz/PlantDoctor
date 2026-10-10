@@ -65,6 +65,10 @@ class AnswerService:
         )
 
         # 4. Map eligible chunks to API output format with full source metadata
+        target_lang = (req.language or "en").lower()[:2]
+        if target_lang not in ("en", "hi", "te", "ta"):
+            target_lang = "en"
+
         chunks_out: List[EvidenceChunkOut] = []
         valid_chunk_ids = set()
 
@@ -85,6 +89,9 @@ class AnswerService:
                 last_verified=source.last_verified,
             )
 
+            src_name = source.institution or (source.authors[0] if source.authors else source.title)
+            explanation = self._generate_chunk_explanation(chunk.text, src_name, target_lang)
+
             chunks_out.append(
                 EvidenceChunkOut(
                     id=chunk.id,
@@ -95,13 +102,11 @@ class AnswerService:
                     relevance_score=chunk.relevance_score,
                     page_or_section=chunk.page_or_section,
                     retrieval_mode=chunk.retrieval_mode,
+                    translated_explanation=explanation,
                 )
             )
 
         # 5. Build Grounded Answer Synthesis
-        target_lang = (req.language or "en").lower()[:2]
-        if target_lang not in ("en", "hi", "te", "ta"):
-            target_lang = "en"
 
         summary, caveats = self._synthesize_grounded_answer(
             query=query,
@@ -326,3 +331,42 @@ class AnswerService:
         if not valid_chunk_ids:
             return text
         return text
+
+    @staticmethod
+    def _generate_chunk_explanation(text: str, src_name: str, lang: str) -> Optional[str]:
+        """Provides farmer-accessible explanation of technical source passages in selected Indic language."""
+        if lang == "en":
+            return f"Key takeaway from {src_name}: Scientific research excerpt validating recommended agronomic practice."
+
+        lower_t = text.lower()
+        if "nitrogen" in lower_t or "chlorosis" in lower_t or "deficiency" in lower_t:
+            if lang == "hi":
+                return "नाइट्रोजन की कमी से पुरानी निचली पत्तियों पर एकसमान पीलापन आता है। संतुलित खाद और जैविक पोषण का प्रयोग करें।"
+            elif lang == "te":
+                return "నత్రజని లోపం వల్ల దిగువ ఆకులు పసుపు రంగులోకి మారుతాయి. సమతుల్య ఎరువులను వాడండి."
+            elif lang == "ta":
+                return "தழைச்சத்து குறைபாட்டினால் கீழ் இலைகள் மஞ்சள் நிறமாக மாறும். சமச்சீர் உரமிடுதலைப் பின்பற்றவும்."
+        elif "wilt" in lower_t or "fusarium" in lower_t or "verticillium" in lower_t or "fungal" in lower_t:
+            if lang == "hi":
+                return "कवक संक्रमण या संवहनी विल्ट से पत्तियां मुरझाती और पीली पड़ती हैं। जल निकासी सुधारें और अनुमोदित कवकनाशी का प्रयोग करें।"
+            elif lang == "te":
+                return "శిలీంధ్ర సంక్రమణ వల్ల ఆకులు వాడిపోయి పసుపు రంగులోకి మారుతాయి. పొలంలో నీటి పారుదల మెరుగుపరచండి."
+            elif lang == "ta":
+                return "பூஞ்சாண தொற்று அல்லது வாடல் நோயினால் இலைகள் வாடி மஞ்சளாகும். வடிகால் வசதியை மேம்படுத்தி பூஞ்சாணக்கொல்லி பயன்படுத்தவும்."
+        elif "moisture" in lower_t or "water" in lower_t or "aeration" in lower_t or "drainage" in lower_t:
+            if lang == "hi":
+                return "मिट्टी में अत्यधिक जलभराव से जड़ों में ऑक्सीजन की कमी हो जाती है। जलभराव रोकें और सिंचाई का अंतर बढ़ाएं।"
+            elif lang == "te":
+                return "నేలలో అధిక తేమ వేర్లకు గాలి అందకుండా చేస్తుంది. పొలంలో నీరు నిల్వ ఉండకుండా చూసుకోండి."
+            elif lang == "ta":
+                return "அதிக ஈரப்பதம் வேர்களுக்கு மூச்சுத்திணறலை உண்டாக்கும். வயலில் நீர் தேங்குவதைத் தவிர்க்கவும்."
+
+        # Contextual default preserving source provenance
+        if lang == "hi":
+            return f"अनुसंधान सारांश ({src_name}): इस वैज्ञानिक निष्कर्ष के अनुसार अनुशंसित फसल सुरक्षा उपाय अपनाएं।"
+        elif lang == "te":
+            return f"పరిశోధనా సారాంశం ({src_name}): ఈ శాస్త్రీయ నిర్ధారణ ప్రకారం సిఫార్సు చేసిన పంట రక్షణ పద్ధతులను పాటించండి."
+        elif lang == "ta":
+            return f"ஆராய்ச்சி சுருக்கம் ({src_name}): இந்த அறிவியல் முடிவின்படி பரிந்துரைக்கப்பட்ட பயிர் பாதுகாப்பு நடைமுறைகளைப் பின்பற்றவும்."
+
+        return None

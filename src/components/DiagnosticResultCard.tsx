@@ -233,7 +233,7 @@ export function DiagnosticResultCard({
         {/* CAVEATS */}
         {result.caveats && result.caveats.length > 0 && (
           <div className="p-3 rounded-xl bg-muted/80 border border-border text-xs text-muted-foreground space-y-1">
-            <span className="font-semibold text-foreground">Notice:</span>
+            <span className="font-semibold text-foreground">{t.noticeHeading}:</span>
             {result.caveats.map((c, i) => (
               <p key={i}>{c}</p>
             ))}
@@ -261,7 +261,7 @@ export function DiagnosticResultCard({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors cursor-pointer"
           >
             <Shield size={16} className="text-primary" aria-hidden="true" />
-            <span>{showSources ? 'Hide Sources' : t.viewSources}</span>
+            <span>{showSources ? t.hideSources : t.viewSources}</span>
             <span className="text-xs text-muted-foreground">({result.evidenceChunks.length})</span>
           </button>
         )}

@@ -13,7 +13,7 @@ import {
   MicOff,
   Camera,
 } from 'lucide-react';
-import { activeService, demoService } from '../services';
+import { activeService, demoService, getLocalizedDemoAnswer } from '../services';
 import { BackendUnavailableError, DeviceOfflineError } from '../api/client';
 import type { AnswerResult, Question } from '../models/types';
 import type { CropContext } from '../components/CropContextFields';
@@ -89,6 +89,17 @@ export function AskPage() {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  // Re-localize active result if open when language changes
+  const lastLanguageRef = useRef(language);
+  useEffect(() => {
+    if (lastLanguageRef.current !== language) {
+      lastLanguageRef.current = language;
+      if (state === 'result' && result) {
+        setResult((prev) => (prev ? getLocalizedDemoAnswer(prev, language) : null));
+      }
+    }
+  }, [language, state, result]);
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -274,7 +285,7 @@ export function AskPage() {
             onClick={cancelListening}
             className="ml-auto underline cursor-pointer hover:opacity-80"
           >
-            Dismiss
+            {t.dismiss}
           </button>
         </div>
       )}
@@ -449,7 +460,7 @@ export function AskPage() {
               if (navigator.onLine) {
                 void runSubmit();
               } else {
-                notify('Still offline. Please reconnect to the internet to submit.', 'info');
+                notify(t.offlineNotice, 'info');
               }
             }}
             secondaryAction={
@@ -478,7 +489,7 @@ export function AskPage() {
 
       {state === 'error' && (
         <div className="space-y-4">
-          <ErrorState title="Cannot reach backend" message={errorMsg} onRetry={() => void runSubmit()} />
+          <ErrorState title={t.errorGeneric} message={errorMsg} onRetry={() => void runSubmit()} />
           <div className="text-center">
             <button
               type="button"
