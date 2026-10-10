@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import UploadFile
 from pydantic import ValidationError
 
-from ..deps import get_answer_service, get_multimodal_service
+from ..deps import get_answer_service, get_multimodal_service, get_classifier_service
 from ..models.schemas import (
     AnswerResult,
     MultimodalAssessmentResult,
@@ -13,6 +13,7 @@ from ..models.schemas import (
 )
 from ..services.answer_service import AnswerService
 from ..services.multimodal_service import MultimodalService
+from ..services.classifier_service import PlantClassifierService
 
 logger = logging.getLogger("plantdoctor.routers.questions")
 
@@ -29,12 +30,14 @@ async def ask_question(
     request: Request,
     answer_service: AnswerService = Depends(get_answer_service),
     multimodal_service: MultimodalService = Depends(get_multimodal_service),
+    classifier_service: PlantClassifierService = Depends(get_classifier_service),
 ) -> AnswerResult:
     """
     Primary evidence-grounded question answering endpoint.
     Accepts JSON body or multipart form (if photo attachment is included).
     Processes query through dense vector / hybrid retrieval and the Evidence Status Gate.
-    When a photo is attached, generates a multimodal diagnostic assessment.
+    When a photo is attached without text, runs real on-device/backend image classification
+    and retrieves evidence relevant to the identified condition.
     """
     content_type = request.headers.get("content-type", "")
 
@@ -66,6 +69,17 @@ async def ask_question(
                 )
             image_mime = upload.content_type
 
+        has_image = bool(image_bytes and len(image_bytes) > 0)
+
+        # Photo-only plant diagnosis: if no text query is entered, classify image
+        if has_image and classifier_service.is_available:
+            clf_result = classifier_service.classify_image(image_bytes)
+            if clf_result:
+                if not crop_id and clf_result.crop_id != "unknown":
+                    crop_id = clf_result.crop_id
+                if not query or len(query) < 3:
+                    query = clf_result.suggested_query
+
         try:
             req = QuestionRequest(
                 query=query,
@@ -73,6 +87,7 @@ async def ask_question(
                 region_id=str(region_id) if region_id else None,
                 growth_stage_id=str(growth_stage_id) if growth_stage_id else None,
                 language=language,
+                has_image=has_image,
             )
         except ValidationError:
             raise HTTPException(status_code=422, detail=_INVALID_QUERY_DETAIL)
@@ -106,11 +121,13 @@ async def ask_question(
 async def assess_crop(
     request: Request,
     multimodal_service: MultimodalService = Depends(get_multimodal_service),
+    classifier_service: PlantClassifierService = Depends(get_classifier_service),
 ) -> MultimodalAssessmentResult:
     """
     Dedicated multimodal diagnostic assessment endpoint.
     Accepts natural language problem description, optional image file,
     crop, region context, and requested response language.
+    Supports photo-only diagnosis when query text is omitted.
     """
     content_type = request.headers.get("content-type", "")
 
@@ -152,8 +169,16 @@ async def assess_crop(
         growth_stage_id = body.get("growth_stage_id") or body.get("growthStageId")
         language = str(body.get("language") or "en")
 
+    has_image = bool(image_bytes and len(image_bytes) > 0)
     if not query or len(query) < 3:
-        raise HTTPException(status_code=422, detail=_INVALID_QUERY_DETAIL)
+        if has_image and classifier_service.is_available:
+            clf_result = classifier_service.classify_image(image_bytes)
+            if clf_result:
+                if not crop_id and clf_result.crop_id != "unknown":
+                    crop_id = clf_result.crop_id
+                query = clf_result.suggested_query
+        else:
+            raise HTTPException(status_code=422, detail=_INVALID_QUERY_DETAIL)
 
     return await multimodal_service.assess(
         query=query,

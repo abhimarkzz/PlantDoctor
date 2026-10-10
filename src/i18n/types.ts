@@ -62,6 +62,8 @@ export interface TranslationDictionary {
   yourQuestionLabel: string;
   questionHint: string;
   askBtn: string;
+  checkPlantHealth: string;
+  optional: string;
   askOfflineBannerTitle: string;
   askOfflineBannerDesc: string;
   askOfflineScreenTitle: string;
@@ -70,6 +72,27 @@ export interface TranslationDictionary {
   backToAsk: string;
   viewFullEvidenceDetails: string;
   editQuestion: string;
+
+  // Offline AI Model & Pack
+  offlineAiPackTitle: string;
+  offlineAiPackDesc: string;
+  offlineModelReady: string;
+  offlineModelNotInstalled: string;
+  offlineDiagnosisReady: string;
+  offlineDiagnosisPartial: string;
+  offlinePrepareBtn: string;
+  offlineRemoveModelBtn: string;
+  offlineVerifying: string;
+  offlineModelVerified: string;
+
+  // System Operational States
+  stateOnlineAtlasReady: string;
+  stateOfflinePhotoDiagnosisReady: string;
+  stateOfflineModelReady: string;
+  stateOfflineKnowledgePackReady: string;
+  statePartialOfflineAvailability: string;
+  stateAppAvailableOffline: string;
+  stateResourcesMissingOrOutdated: string;
 
   // Context Accordion
   hideCropRegion: string;

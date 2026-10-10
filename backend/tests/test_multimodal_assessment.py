@@ -34,18 +34,15 @@ def test_assess_text_only_query():
 
 def test_assess_with_multipart_image():
     """Verify assessment with valid uploaded image file attachment."""
-    # Create a tiny mock 1x1 JPEG byte stream
-    mock_jpeg = (
-        b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00`\x00`\x00\x00\xff\xdb\x00C\x00"
-        b"\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f"
-        b"\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01"
-        b"\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b"
-        b"\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xbf\x00\xff\xd9"
-    )
+    from PIL import Image
+    img = Image.new("RGB", (224, 224), color=(34, 139, 34))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    valid_jpeg = buf.getvalue()
 
-    files = {"image": ("test_leaf.jpg", io.BytesIO(mock_jpeg), "image/jpeg")}
+    files = {"image": ("test_leaf.jpg", io.BytesIO(valid_jpeg), "image/jpeg")}
     data = {
-        "query": "Are these brown spots early blight or nutrient deficiency?",
+        "query": "Are these brown spots early blight or nutrient deficiency on Tomato?",
         "cropId": "Tomato",
         "regionId": "Tropical / Sub-tropical",
         "language": "te",
@@ -59,6 +56,27 @@ def test_assess_with_multipart_image():
     assert result["language"] == "te"
     assert len(result["visibleObservations"]) > 0
     assert "Tomato" in result["likelyIssue"] or "టమోటా" in result["likelyIssue"] or "Symptom" in result["likelyIssue"] or "లక్షణాల" in result["likelyIssue"]
+
+
+def test_photo_only_diagnosis():
+    """Verify photo-only plant diagnosis works without typing a question."""
+    from PIL import Image
+    img = Image.new("RGB", (224, 224), color=(34, 139, 34))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    valid_jpeg = buf.getvalue()
+
+    files = {"image": ("field_leaf.jpg", io.BytesIO(valid_jpeg), "image/jpeg")}
+    data = {"query": "", "language": "hi"}
+
+    response = client.post("/api/v1/ask", data=data, files=files)
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert "summary" in result
+    assert "overallStatus" in result
+    assert "assessment" in result
+    assert result["assessment"]["imageAttached"] is True
+    assert result["assessment"]["visionModelStatus"] == "onnx_mobilenet_v2_active"
 
 
 def test_assess_rejects_invalid_mime_type():

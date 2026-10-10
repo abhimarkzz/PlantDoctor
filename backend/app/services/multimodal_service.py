@@ -21,6 +21,7 @@ from ..models.schemas import (
 )
 from .evidence_gate import EvidenceStatusGate
 from .retrieval import RetrievalService
+from .classifier_service import PlantClassifierService, PlantClassificationResult
 
 logger = logging.getLogger("plantdoctor.multimodal")
 
@@ -31,10 +32,12 @@ class MultimodalService:
         retrieval_service: RetrievalService,
         source_repo: SourceRepository,
         evidence_gate: EvidenceStatusGate,
+        classifier_service: Optional[PlantClassifierService] = None,
     ):
         self.retrieval = retrieval_service
         self.source_repo = source_repo
         self.gate = evidence_gate
+        self.classifier = classifier_service
 
     async def assess(
         self,
@@ -58,9 +61,28 @@ class MultimodalService:
         if lang_code not in ("en", "hi", "te", "ta"):
             lang_code = "en"
 
+        has_image = bool(image_bytes and len(image_bytes) > 0)
+        has_gemini = bool(settings.gemini_api_key and settings.gemini_api_key.strip())
+
+        # Real ONNX plant disease classifier
+        clf_result: Optional[PlantClassificationResult] = None
+        if has_image and self.classifier:
+            clf_result = self.classifier.classify_image(image_bytes)
+            if clf_result and not clf_result.should_abstain and clf_result.crop_id != "unknown":
+                if not crop_id:
+                    crop_id = clf_result.crop_id
+
+        # Determine effective query for evidence retrieval
+        effective_query = trimmed_query
+        if clf_result and not clf_result.should_abstain:
+            if not effective_query or len(effective_query) < 3:
+                effective_query = clf_result.suggested_query
+            else:
+                effective_query = f"{effective_query} {clf_result.suggested_query}".strip()
+
         # 1. Retrieve evidence chunks from Atlas
         retrieved_chunks = self.retrieval.hybrid_search(
-            query=trimmed_query,
+            query=effective_query,
             crop_id=crop_id,
             region_id=region_id,
             limit=6,
@@ -76,7 +98,7 @@ class MultimodalService:
 
         # 3. Evaluate through Evidence Status Gate
         gate_eval = self.gate.evaluate(
-            query=trimmed_query,
+            query=effective_query,
             crop_id=crop_id,
             region_id=region_id,
             retrieved_chunks=retrieved_chunks,
@@ -115,12 +137,9 @@ class MultimodalService:
             )
 
         # 5. Multimodal Vision Assessment
-        has_image = bool(image_bytes and len(image_bytes) > 0)
-        has_gemini = bool(settings.gemini_api_key and settings.gemini_api_key.strip())
-
         if has_image and has_gemini:
             vision_result = await self._call_gemini_vision(
-                query=trimmed_query,
+                query=effective_query,
                 image_bytes=image_bytes,
                 image_mime_type=image_mime_type or "image/jpeg",
                 crop_id=crop_id,
@@ -155,6 +174,7 @@ class MultimodalService:
             gate_caveats=gate_eval.caveats,
             chunks=chunks_out,
             conflicts=gate_eval.conflicts_detected,
+            clf_result=clf_result,
         )
 
     async def _call_gemini_vision(
@@ -272,35 +292,63 @@ DIAGNOSTIC SAFETY RULES:
         gate_caveats: List[str],
         chunks: List[EvidenceChunkOut],
         conflicts: List[str],
+        clf_result: Optional[PlantClassificationResult] = None,
     ) -> MultimodalAssessmentResult:
         """Constructs an honest, structured assessment when vision model key is not configured."""
-        model_status = "gemini_unconfigured" if has_image else "no_image_provided"
+        if clf_result is not None:
+            model_status = "onnx_mobilenet_v2_active"
+            if clf_result.should_abstain:
+                gate_status = EvidenceStatus.INSUFFICIENT_EVIDENCE
+                gate_reason = clf_result.abstention_reason or gate_reason
+        else:
+            model_status = "gemini_unconfigured" if has_image else "no_image_provided"
+
         lang_code = language.lower()[:2] if language else "en"
         observations: List[str] = []
 
         # Build localized observations
-        if lang_code == "hi":
-            if has_image:
-                observations.append("पौधे की तस्वीर प्राप्त और जांची गई। (सूचना: लाइव विज़न कुंजी कॉन्फ़िगर नहीं है; विश्लेषण प्रश्न और वैज्ञानिक साक्ष्यों पर आधारित है।)")
+        if clf_result:
+            if clf_result.should_abstain:
+                if lang_code == "hi":
+                    observations.append(f"छवि गुणवत्ता सूचना: {clf_result.abstention_reason}")
+                elif lang_code == "te":
+                    observations.append(f"చిత్ర నాణ్యత గమనిక: {clf_result.abstention_reason}")
+                elif lang_code == "ta":
+                    observations.append(f"படத் தரம் குறிப்பு: {clf_result.abstention_reason}")
+                else:
+                    observations.append(f"Image Quality Note: {clf_result.abstention_reason}")
             else:
-                observations.append("पौधे की कोई तस्वीर संलग्न नहीं है। विश्लेषण वर्णित लक्षणों पर आधारित है।")
-        elif lang_code == "te":
-            if has_image:
-                observations.append("మొక్క ఫోటో స్వీకరించబడింది మరియు పరిశీలించబడింది. (గమనిక: లైవ్ విజన్ కీ కాన్ఫిగర్ కాలేదు; విశ్లేషణ ప్రశ్న మరియు శాస్త్రీయ ఆధారాలపై ఆధారపడి ఉంది.)")
-            else:
-                observations.append("మొక్క ఫోటో జతచేయబడలేదు. విశ్లేషణ వివరించిన లక్షణాలపై ఆధారపడి ఉంది.")
-        elif lang_code == "ta":
-            if has_image:
-                observations.append("பயிர் படம் பெறப்பட்டு சரிபார்க்கப்பட்டது. (குறிப்பு: நேரடி பார்வை விசை உள்ளமைக்கப்படவில்லை; பகுப்பாய்வு கேள்வி மற்றும் அறிவியல் சான்றுகளின் அடிப்படையில் உள்ளது.)")
-            else:
-                observations.append("பயிர் படம் இணைக்கப்படவில்லை. பகுப்பாய்வு விவரிக்கப்பட்ட அறிகுறிகளின் அடிப்படையில் உள்ளது.")
+                if lang_code == "hi":
+                    observations.append(f"विज़ुअल लक्षण पहचान (MobileNetV2): {clf_result.label} (सटीकता स्कोर: {clf_result.confidence:.1%})।")
+                elif lang_code == "te":
+                    observations.append(f"దృశ్య లక్షణాల గుర్తింపు (MobileNetV2): {clf_result.label} (ఖచ్చితత్వ స్కోరు: {clf_result.confidence:.1%}).")
+                elif lang_code == "ta":
+                    observations.append(f"காட்சி அறிகுறி பொருத்தம் (MobileNetV2): {clf_result.label} (நம்பகத்தன்மை: {clf_result.confidence:.1%}).")
+                else:
+                    observations.append(f"Visual symptom match (MobileNetV2): {clf_result.label} (model score: {clf_result.confidence:.1%}).")
         else:
-            if has_image:
-                observations.append(
-                    "Image received and verified. (Note: Live vision inference key is unconfigured; symptom assessment is grounded in query keywords and verified agricultural evidence.)"
-                )
+            if lang_code == "hi":
+                if has_image:
+                    observations.append("पौधे की तस्वीर प्राप्त और जांची गई। (सूचना: लाइव विज़न कुंजी कॉन्फ़िगर नहीं है; विश्लेषण प्रश्न और वैज्ञानिक साक्ष्यों पर आधारित है।)")
+                else:
+                    observations.append("पौधे की कोई तस्वीर संलग्न नहीं है। विश्लेषण वर्णित लक्षणों पर आधारित है।")
+            elif lang_code == "te":
+                if has_image:
+                    observations.append("మొక్క ఫోటో స్వీకరించబడింది మరియు పరిశీలించబడింది. (గమనిక: లైవ్ విజన్ కీ కాన్ఫిగర్ కాలేదు; విశ్లేషణ ప్రశ్న మరియు శాస్త్రీయ ఆధారాలపై ఆధారపడి ఉంది.)")
+                else:
+                    observations.append("మొక్క ఫోటో జతచేయబడలేదు. విశ్లేషణ వివరించిన లక్షణాలపై ఆధారపడి ఉంది.")
+            elif lang_code == "ta":
+                if has_image:
+                    observations.append("பயிர் படம் பெறப்பட்டு சரிபார்க்கப்பட்டது. (குறிப்பு: நேரடி பார்வை விசை உள்ளமைக்கப்படவில்லை; பகுப்பாய்வு கேள்வி மற்றும் அறிவியல் சான்றுகளின் அடிப்படையில் உள்ளது.)")
+                else:
+                    observations.append("பயிர் படம் இணைக்கப்படவில்லை. பகுப்பாய்வு விவரிக்கப்பட்ட அறிகுறிகளின் அடிப்படையில் உள்ளது.")
             else:
-                observations.append("No plant photograph attached. Assessment based on described symptoms.")
+                if has_image:
+                    observations.append(
+                        "Image received and verified. (Note: Live vision inference key is unconfigured; symptom assessment is grounded in query keywords and verified agricultural evidence.)"
+                    )
+                else:
+                    observations.append("No plant photograph attached. Assessment based on described symptoms.")
 
         causes: List[str] = []
         steps: List[str] = []
@@ -462,6 +510,14 @@ DIAGNOSTIC SAFETY RULES:
                 diffs.append("Check if symptoms appear in isolated patches or across the entire field.")
                 confidence = "Moderate - Grounded in verified repository bulletins"
                 warnings_list.append("Always wear protective gear and adhere to safety pre-harvest intervals.")
+
+        # Refine with vision classifier prediction if available and valid
+        if clf_result and not clf_result.should_abstain:
+            likely_issue = f"{clf_result.label} ({clf_result.confidence:.1%})"
+            for c in clf_result.top_candidates[1:]:
+                diffs.insert(0, f"{c.label} ({c.probability:.1%})")
+            if clf_result.is_healthy:
+                causes = ["Healthy plant foliage without visible foliar pathogen lesions."]
 
         return MultimodalAssessmentResult(
             id=f"assess-{uuid.uuid4().hex[:10]}",

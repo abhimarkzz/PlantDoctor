@@ -8,6 +8,7 @@ import { EvidenceDetailPage } from './pages/EvidenceDetailPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { PackDetailPage } from './pages/PackDetailPage';
 import { AboutPage } from './pages/AboutPage';
+import { PrivacyPolicyPage, TermsPage, StoragePolicyPage } from './pages/LegalPages';
 
 function App() {
   return (
@@ -22,6 +23,9 @@ function App() {
           <Route path="library" element={<LibraryPage />} />
           <Route path="library/:id" element={<PackDetailPage />} />
           <Route path="about" element={<AboutPage />} />
+          <Route path="privacy" element={<PrivacyPolicyPage />} />
+          <Route path="terms" element={<TermsPage />} />
+          <Route path="storage" element={<StoragePolicyPage />} />
           <Route
             path="*"
             element={

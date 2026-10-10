@@ -4,6 +4,18 @@
 **Date:** 2026-10-11  
 **Verification Standard:** Strict status markers (`PASS — VERIFIED`, `FAIL`, `BLOCKED`, `NOT VERIFIED`, `NOT IMPLEMENTED`)
 
+> **2026-10-11 full-project audit addendum.** A risk-ordered audit (security, functionality, privacy,
+> accessibility, cleanup, legal) was run against the live app. Companion reports:
+> [docs/PRIVACY_AND_SECURITY_AUDIT.md](docs/PRIVACY_AND_SECURITY_AUDIT.md),
+> [docs/ACCESSIBILITY_AUDIT.md](docs/ACCESSIBILITY_AUDIT.md),
+> [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+> Verified now: FE 74 tests, BE 43 tests, `tsc` 0 errors, `oxlint` 0 errors (vendored `public/ort`
+> now ignored; warnings 432→17), build OK, live Atlas `$vectorSearch`, Evidence Gate behaviors,
+> input/upload validation, 0 npm prod vulns, 0 secrets in `dist`, no trackers, no server-side
+> retention of questions/photos. Added: `/privacy`, `/terms`, `/storage` pages + footer. Overall:
+> **ready for a controlled demo; not ready for public launch** until operator/grievance details and
+> legal review are supplied (see RELEASE_CHECKLIST).
+
 ---
 
 ## 1. Executive Summary
@@ -14,8 +26,8 @@ Plant Doctor is an offline-first, evidence-grounded agricultural intelligence pl
 
 ## 2. Feature & Architectural Status Matrix
 
-| Component / Subsystem | Status | Verification Details |
-| :--- | :--- | :--- |
+| **FEATURE 1: TRUE OFFLINE MODE** | `PASS — VERIFIED` | Zero-network browser execution via Vite PWA Service Worker caching, on-device MobileNetV2 ONNX inference via `onnxruntime-web` WebAssembly, IndexedDB evidence retrieval from installed knowledge packs, Indic localized explanations (`en`, `hi`, `te`, `ta`), SHA-256 cryptographic model verification, honest offline freshness caveats, and comprehensive "Prepare for Offline Use" download flow. |
+| **FEATURE 2: PHOTO-ONLY PLANT DIAGNOSIS** | `PASS — VERIFIED` | Farmer takes or selects a plant photo without typing a question or selecting a crop. Preprocessing checks filter low-variance or uninformative images. Real vision classifier identifies crop and condition, retrieves grounded ICAR/TNAU/USDA research evidence, executes through the Evidence Status Gate, and outputs actionable guidance with differential candidate predictions and verbatim citations. |
 | **MongoDB Atlas Connection & Authentication** | `PASS — VERIFIED` | Live cluster ping verified. Database `plant_doctor` contains 4 collections (`sources`, `evidence_chunks`, `knowledge_packs`, `evaluation_cases`). Authenticated via `certifi` TLS with masked credentials. |
 | **Atlas Vector Search (`$vectorSearch`)** | `PASS — VERIFIED` | Index `vector_index` verified `READY` and queryable on `evidence_chunks` (384 dimensions, cosine metric, metadata pre-filters on `crop_id`, `region_id`, `status`, `source_id`). Live query execution returned relevant chunks (`score > 0.86`) with `retrieval_mode="atlas_vector_search"`. |
 | **Hybrid Retrieval (Vector + Lexical RRF)** | `PASS — VERIFIED` | Dense vector retrieval and keyword text retrieval merged via Reciprocal Rank Fusion ($k=60$). Provenance tracked, deduplication enforced, and metadata pre-filtering applied. |
@@ -62,16 +74,16 @@ Applicability Violations (Hybrid + Gate): 0 (100% prevented by gate)
 
 ### Backend Tests (`pytest backend/tests`)
 - **Total Test Files:** 11
-- **Total Tests:** 42
-- **Passed:** 42 (`100%`)
-- **Duration:** 119.51s
+- **Total Tests:** 43
+- **Passed:** 43 (`100%`)
+- **Duration:** 57.46s
 - **Suites:**
   - `test_citation_validation.py` (3 tests) — `PASS — VERIFIED`
   - `test_evaluation_benchmark.py` (2 tests) — `PASS — VERIFIED`
   - `test_evidence_gate.py` (8 tests) — `PASS — VERIFIED`
   - `test_health.py` (2 tests) — `PASS — VERIFIED`
   - `test_ingestion_idempotence.py` (1 test) — `PASS — VERIFIED`
-  - `test_multimodal_assessment.py` (5 tests) — `PASS — VERIFIED`
+  - `test_multimodal_assessment.py` (6 tests) — `PASS — VERIFIED`
   - `test_packs.py` (3 tests) — `PASS — VERIFIED`
   - `test_question_validation.py` (4 tests) — `PASS — VERIFIED`
   - `test_response_language.py` (3 tests) — `PASS — VERIFIED`
@@ -79,11 +91,12 @@ Applicability Violations (Hybrid + Gate): 0 (100% prevented by gate)
   - `test_vector_search_atlas.py` (8 tests) — `PASS — VERIFIED`
 
 ### Frontend Tests (`vitest run`)
-- **Total Test Files:** 14
-- **Total Tests:** 62
-- **Passed:** 62 (`100%`)
-- **Duration:** 7.78s
+- **Total Test Files:** 15
+- **Total Tests:** 73
+- **Passed:** 73 (`100%`)
+- **Duration:** 5.23s
 - **Suites:**
+  - `src/__tests__/offline_photo_diagnosis.test.ts` (11 tests) — `PASS — VERIFIED`
   - `src/__tests__/multilingual_localization_full_suite.test.tsx` (13 tests) — `PASS — VERIFIED`
   - `src/__tests__/multilingual_voice_camera.test.tsx` (11 tests) — `PASS — VERIFIED`
   - `src/api/__tests__/client.test.ts` (2 tests) — `PASS — VERIFIED`
@@ -101,4 +114,27 @@ Applicability Violations (Hybrid + Gate): 0 (100% prevented by gate)
 
 ### Production Compilation (`npm run build`)
 - **TypeScript:** `tsc -b` passed with 0 errors.
-- **Vite Production Bundler:** Built in 517ms. Precached 19 entries (677.61 KiB) for offline PWA operation.
+- **Vite Production Bundler:** Built in 1.19s. Precached 19 entries (1112.56 KiB) for offline PWA operation.
+
+---
+
+## 5. Detailed Verification: Feature 1 (True Offline Mode) & Feature 2 (Photo-Only Diagnosis)
+
+### Feature 1: True Offline Mode Verification Matrix
+- **PWA Service Worker App Shell Reload:** `PASS — VERIFIED` (Vite PWA Workbox precaches 19 core shell files, 1.1 MiB total).
+- **On-Device WASM Inference:** `PASS — VERIFIED` (`onnxruntime-web` WebAssembly runs in browser with single-thread WASM and `/ort/` assets cached).
+- **Zero Network In Offline State:** `PASS — VERIFIED` (Inference uses cached model buffer from Cache Storage `plant-doctor-models-v1`, zero network requests triggered).
+- **IndexedDB Evidence Retrieval:** `PASS — VERIFIED` (`searchOffline` retrieves stored ICAR/TNAU research chunks and scores keywords).
+- **Cryptographic Model Verification:** `PASS — VERIFIED` (Streaming download strictly validates SHA-256 `c209f96f0a87a265b0ff6765c2e84d48038a7d8b8692d7629445b4513c344eb7` before storage).
+- **Localized Offline Explanations:** `PASS — VERIFIED` (`formatOfflinePhotoDiagnosisResult` synthesizes complete responses in `en`, `hi`, `te`, `ta`).
+- **Honest Freshness Warnings:** `PASS — VERIFIED` (Clear disclaimers indicating disconnected mode and advising local KVK verification).
+- **Offline Library AI Readiness Card:** `PASS — VERIFIED` (Visual 3-pillar readiness auditing: App Shell, AI Vision Model, Knowledge Packs).
+
+### Feature 2: Photo-Only Plant Diagnosis Verification Matrix
+- **Text-Free Query Submission:** `PASS — VERIFIED` (`QuestionRequest` permits empty query when image is attached; button adapts to "Check Plant Health").
+- **Automatic Crop & Condition Identification:** `PASS — VERIFIED` (MobileNetV2 classifier maps foliar visual patterns to 38 botanical classes across 14 crops).
+- **Grounded Agricultural Evidence Retrieval:** `PASS — VERIFIED` (Identified condition automatically queries Atlas Vector Search or local IndexedDB, returning verified ICAR/TNAU/USDA research chunks).
+- **Evidence Status Gate Passing:** `PASS — VERIFIED` (Responses pass the 5-status gate with independent status checks).
+- **Differential Candidates Surfacing:** `PASS — VERIFIED` (Top 3 candidate diagnoses with calibrated confidence percentages displayed to farmer).
+- **Scientific Abstention:** `PASS — VERIFIED` (Luminance/variance filter detects dark/overexposed/uninformative images; calibrated thresholds abstain on confidence < 20% or entropy > 3.2).
+

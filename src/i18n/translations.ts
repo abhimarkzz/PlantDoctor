@@ -47,6 +47,8 @@ export const en: TranslationDictionary = {
   yourQuestionLabel: 'Your question',
   questionHint: 'Minimum 10 characters · Up to 2000 characters',
   askBtn: 'Ask',
+  checkPlantHealth: 'Check Plant Health',
+  optional: 'optional',
   askOfflineBannerTitle: 'Device is offline — Application shell cached',
   askOfflineBannerDesc: 'You can draft questions and test the context form while offline. Live question submission requires an active network connection. You can also view offline illustrative examples.',
   askOfflineScreenTitle: 'Question submission unavailable offline',
@@ -55,6 +57,27 @@ export const en: TranslationDictionary = {
   backToAsk: 'Back to Ask',
   viewFullEvidenceDetails: 'View full evidence details →',
   editQuestion: 'Edit question',
+
+  // Offline AI Model & Pack
+  offlineAiPackTitle: 'On-Device Plant Diagnosis AI Pack',
+  offlineAiPackDesc: 'Download the lightweight botanical image classifier (8.8 MB ONNX) and agricultural reference packs to identify crop diseases in the field with zero internet.',
+  offlineModelReady: 'On-Device Model Ready (WebAssembly)',
+  offlineModelNotInstalled: 'Model Not Installed',
+  offlineDiagnosisReady: 'Offline Photo Diagnosis Ready',
+  offlineDiagnosisPartial: 'Partial Offline Availability',
+  offlinePrepareBtn: 'Prepare for Offline Use',
+  offlineRemoveModelBtn: 'Remove Offline Model',
+  offlineVerifying: 'Verifying Model Integrity…',
+  offlineModelVerified: 'SHA-256 Verified',
+
+  // System Operational States
+  stateOnlineAtlasReady: 'Online Atlas Retrieval Available',
+  stateOfflinePhotoDiagnosisReady: 'Offline Photo Diagnosis Ready',
+  stateOfflineModelReady: 'Offline Model Ready',
+  stateOfflineKnowledgePackReady: 'Offline Knowledge Pack Ready',
+  statePartialOfflineAvailability: 'Partial Offline Availability',
+  stateAppAvailableOffline: 'Application Available Offline',
+  stateResourcesMissingOrOutdated: 'Resources Missing or Out of Date',
 
   // Context Accordion
   hideCropRegion: '▾ Hide Crop & Region',
@@ -349,6 +372,8 @@ export const hi: TranslationDictionary = {
   yourQuestionLabel: 'आपका सवाल',
   questionHint: 'कम से कम 10 अक्षर · अधिकतम 2000 अक्षर',
   askBtn: 'पूछें',
+  checkPlantHealth: 'पौधे के स्वास्थ्य की जांच करें',
+  optional: 'वैकल्पिक',
   askOfflineBannerTitle: 'डिवाइस ऑफ़लाइन है — एप्लिकेशन शेल कैश्ड',
   askOfflineBannerDesc: 'आप ऑफ़लाइन रहते हुए प्रश्न लिख सकते हैं और फ़ॉर्म का परीक्षण कर सकते हैं। लाइव प्रश्न भेजने के लिए इंटरनेट आवश्यक है।',
   askOfflineScreenTitle: 'ऑफ़लाइन प्रश्न जमा करना अनुपलब्ध है',
@@ -357,6 +382,27 @@ export const hi: TranslationDictionary = {
   backToAsk: 'सवाल पर वापस जाएं',
   viewFullEvidenceDetails: 'पूर्ण साक्ष्य विवरण देखें →',
   editQuestion: 'सवाल बदलें',
+
+  // Offline AI Model & Pack
+  offlineAiPackTitle: 'ऑन-डिवाइस पादप निदान एआई पैक',
+  offlineAiPackDesc: 'बिना इंटरनेट के खेतों में फसलों के रोगों की पहचान करने के लिए बॉटनिकल इमेज क्लासिफायर (8.8 MB ONNX) और कृषि ज्ञान पैक डाउनलोड करें।',
+  offlineModelReady: 'ऑन-डिवाइस मॉडल तैयार (WebAssembly)',
+  offlineModelNotInstalled: 'मॉडल इंस्टॉल नहीं है',
+  offlineDiagnosisReady: 'ऑफ़लाइन फोटो निदान तैयार',
+  offlineDiagnosisPartial: 'आंशिक ऑफ़लाइन उपलब्धता',
+  offlinePrepareBtn: 'ऑफ़लाइन उपयोग के लिए तैयार करें',
+  offlineRemoveModelBtn: 'ऑफ़लाइन मॉडल हटाएं',
+  offlineVerifying: 'मॉडल सत्यनिष्ठा की जांच हो रही है…',
+  offlineModelVerified: 'SHA-256 सत्यापित',
+
+  // System Operational States
+  stateOnlineAtlasReady: 'ऑनलाइन एटलस पुनर्प्राप्ति उपलब्ध',
+  stateOfflinePhotoDiagnosisReady: 'ऑफ़लाइन फोटो निदान तैयार',
+  stateOfflineModelReady: 'ऑफ़लाइन मॉडल तैयार',
+  stateOfflineKnowledgePackReady: 'ऑफ़लाइन ज्ञान पैक तैयार',
+  statePartialOfflineAvailability: 'आंशिक ऑफ़लाइन उपलब्धता',
+  stateAppAvailableOffline: 'एप्लिकेशन ऑफ़लाइन उपलब्ध',
+  stateResourcesMissingOrOutdated: 'संसाधन अनुपलब्ध या पुराने हैं',
 
   // Context Accordion
   hideCropRegion: '▾ फसल और क्षेत्र विवरण छुपाएं',
@@ -651,6 +697,8 @@ export const te: TranslationDictionary = {
   yourQuestionLabel: 'మీ ప్రశ్న',
   questionHint: 'కనీసం 10 అక్షరాలు · గరిష్టంగా 2000 అక్షరాలు',
   askBtn: 'అడగండి',
+  checkPlantHealth: 'మొక్కల ఆరోగ్యాన్ని తనిఖీ చేయండి',
+  optional: 'ఐచ్ఛికం',
   askOfflineBannerTitle: 'పరికరం ఆఫ్‌లైన్‌లో ఉంది — అప్లికేషన్ షెల్ నిల్వ చేయబడింది',
   askOfflineBannerDesc: 'మీరు ఆఫ్‌లైన్‌లో ఉన్నప్పుడు ప్రశ్నలను వ్రాయవచ్చు. ప్రత్యక్ష ప్రశ్న సమర్పణకు నెట్‌వర్క్ కనెక్షన్ అవసరం.',
   askOfflineScreenTitle: 'ఆఫ్‌లైన్‌లో ప్రశ్న సమర్పణ అందుబాటులో లేదు',
@@ -659,6 +707,27 @@ export const te: TranslationDictionary = {
   backToAsk: 'ప్రశ్నకు తిరిగి వెళ్లండి',
   viewFullEvidenceDetails: 'పూర్తి ఆధారాల వివరాలు చూడండి →',
   editQuestion: 'ప్రశ్నను సవరించండి',
+
+  // Offline AI Model & Pack
+  offlineAiPackTitle: 'ఆన్-డివైస్ మొక్కల నిర్ధారణ AI ప్యాక్',
+  offlineAiPackDesc: 'ఇంటర్నెట్ లేకుండా పొలాల్లో పంటల వ్యాధులను గుర్తించడానికి తేలికపాటి ఇమేజ్ క్లాసిఫైయర్ (8.8 MB ONNX) మరియు వ్యవసాయ సూచన ప్యాక్‌లను డౌన్‌లోడ్ చేయండి.',
+  offlineModelReady: 'ఆన్-డివైస్ మోడల్ సిద్ధంగా ఉంది (WebAssembly)',
+  offlineModelNotInstalled: 'మోడల్ ఇన్‌స్టాల్ చేయబడలేదు',
+  offlineDiagnosisReady: 'ఆఫ్‌లైన్ ఫోటో నిర్ధారణ సిద్ధంగా ఉంది',
+  offlineDiagnosisPartial: 'పాక్షిక ఆఫ్‌లైన్ లభ్యత',
+  offlinePrepareBtn: 'ఆఫ్‌లైన్ ఉపయోగం కోసం సిద్ధం చేయండి',
+  offlineRemoveModelBtn: 'ఆఫ్‌లైన్ మోడల్‌ను తొలగించండి',
+  offlineVerifying: 'మోడల్ సమగ్రతను ధృవీకరిస్తోంది…',
+  offlineModelVerified: 'SHA-256 ధృవీకరించబడింది',
+
+  // System Operational States
+  stateOnlineAtlasReady: 'ఆన్‌లైన్ అట్లాస్ శోధన అందుబాటులో ఉంది',
+  stateOfflinePhotoDiagnosisReady: 'ఆఫ్‌లైన్ ఫోటో నిర్ధారణ సిద్ధంగా ఉంది',
+  stateOfflineModelReady: 'ఆఫ్‌లైన్ మోడల్ సిద్ధంగా ఉంది',
+  stateOfflineKnowledgePackReady: 'ఆఫ్‌లైన్ నాలెడ్జ్ ప్యాక్ సిద్ధంగా ఉంది',
+  statePartialOfflineAvailability: 'పాక్షిక ఆఫ్‌లైన్ లభ్యత',
+  stateAppAvailableOffline: 'అప్లికేషన్ ఆఫ్‌లైన్‌లో అందుబాటులో ఉంది',
+  stateResourcesMissingOrOutdated: 'వనరులు లేవు లేదా గడువు ముగిసినవి',
 
   // Context Accordion
   hideCropRegion: '▾ పంట & ప్రాంత వివరాలు దాచండి',
@@ -953,6 +1022,8 @@ export const ta: TranslationDictionary = {
   yourQuestionLabel: 'உங்கள் கேள்வி',
   questionHint: 'குறைந்தது 10 எழுத்துக்கள் · அதிகபட்சம் 2000 எழுத்துக்கள்',
   askBtn: 'கேட்க',
+  checkPlantHealth: 'தாவர ஆரோக்கியத்தை சரிபார்க்கவும்',
+  optional: 'விருப்பத்தேர்வு',
   askOfflineBannerTitle: 'சாதனம் ஆஃப்லைனில் உள்ளது — பயன்பாட்டு ஷெல் சேமிக்கப்பட்டுள்ளது',
   askOfflineBannerDesc: 'நீங்கள் ஆஃப்லைனில் இருக்கும்போது கேள்விகளை வரைவு செய்யலாம். நேரலை கேள்வி சமர்ப்பிப்பிற்கு இணைய இணைப்பு தேவை.',
   askOfflineScreenTitle: 'ஆஃப்லைனில் கேள்வி சமர்ப்பித்தல் கிடைக்கவில்லை',
@@ -961,6 +1032,27 @@ export const ta: TranslationDictionary = {
   backToAsk: 'கேள்விக்குத் திரும்புக',
   viewFullEvidenceDetails: 'முழு சான்று விவரங்களைக் காண்க →',
   editQuestion: 'கேள்வியை மாற்றுக',
+
+  // Offline AI Model & Pack
+  offlineAiPackTitle: 'சாதனத்திலுள்ள தாவர நோயறிதல் AI தொகுப்பு',
+  offlineAiPackDesc: 'இணையம் இல்லாமல் வயலில் பயிர் நோய்களைக் கண்டறிய இலகுரக தாவர பட வகைப்படுத்தி (8.8 MB ONNX) மற்றும் குறிப்புப் பொதிகளைப் பதிவிறக்கவும்.',
+  offlineModelReady: 'சாதன மாதிரி தயார் (WebAssembly)',
+  offlineModelNotInstalled: 'மாதிரி நிறுவப்படவில்லை',
+  offlineDiagnosisReady: 'ஆஃப்லைன் புகைப்பட நோயறிதல் தயார்',
+  offlineDiagnosisPartial: 'பகுதி ஆஃப்லைன் இருப்பு',
+  offlinePrepareBtn: 'ஆஃப்லைன் பயன்பாட்டிற்கு தயார் செய்யவும்',
+  offlineRemoveModelBtn: 'ஆஃப்லைன் மாதிரியை அகற்று',
+  offlineVerifying: 'மாதிரி ஒருமைப்பாடு சரிபார்க்கப்படுகிறது…',
+  offlineModelVerified: 'SHA-256 சரிபார்க்கப்பட்டது',
+
+  // System Operational States
+  stateOnlineAtlasReady: 'ஆன்லைன் அட்லஸ் மீட்டெடுப்பு கிடைக்கிறது',
+  stateOfflinePhotoDiagnosisReady: 'ஆஃப்லைன் புகைப்பட நோயறிதல் தயார்',
+  stateOfflineModelReady: 'ஆஃப்லைன் மாதிரி தயார்',
+  stateOfflineKnowledgePackReady: 'ஆஃப்லைன் அறிவுப் பொதி தயார்',
+  statePartialOfflineAvailability: 'பகுதி ஆஃப்லைன் இருப்பு',
+  stateAppAvailableOffline: 'பயன்பாடு ஆஃப்லைனில் கிடைக்கிறது',
+  stateResourcesMissingOrOutdated: 'வளங்கள் இல்லை அல்லது காலாவதியானது',
 
   // Context Accordion
   hideCropRegion: '▾ பயிர் & பகுதி விவரங்களை மறைக்க',
