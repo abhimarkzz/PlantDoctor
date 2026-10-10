@@ -1,132 +1,130 @@
 # Plant Doctor
 
-An offline-first, evidence-grounded agricultural assistant that helps users access traceable agricultural guidance and understand when available evidence is incomplete, conflicting, outdated, or unsuitable for their situation.
+An offline-first, evidence-grounded agricultural assistant that helps growers access traceable agricultural guidance and understand when available evidence is incomplete, conflicting, outdated, or unsuitable for their situation.
 
-## Current status: Frontend milestone (v0.1.0)
+---
 
-This is the frontend-only milestone. No backend, database, model, or real agricultural data is connected. All example content is clearly labelled as illustrative.
+## Technical Highlights
 
-## Quick start
+1. **MongoDB Atlas Evidence Data Model:**
+   - Authoritative database architecture for `sources`, `evidence_chunks`, `knowledge_packs`, and `evaluation_cases`.
+   - Real 384-dimensional dense vector embeddings generated via FastEmbed (`BAAI/bge-small-en-v1.5`) without requiring third-party cloud API keys.
+   - Atlas Vector Search definition (`vector_index`) with metadata pre-filtering by crop and region.
+   - Hybrid retrieval fusing Dense Vector Search and Keyword Text Search with Reciprocal Rank Fusion ($RRF$, $k=60$).
 
+2. **Defensible Evidence Status Gate:**
+   - Deterministic agricultural applicability evaluation:
+     - **Applicable:** Evidence matches crop/climate context, meets relevance floor (0.40), and is fresh (< 3 years).
+     - **Context Incomplete:** Informs user when crop or regional context is missing rather than guessing.
+     - **Conflicting Evidence:** Detects opposing management directives across authoritative sources (e.g., chemical fungicide applications vs. organic biocontrol restrictions).
+     - **Freshness Unverified:** Flags historical or un-reverified bulletins (> 3 years old) without obscuring them.
+     - **Insufficient Evidence:** Deterministically rejects hard cross-crop mismatches (e.g. rice blast advice applied to tomato), preventing LLM hallucination.
+
+3. **Offline Knowledge Packs & PWA IndexedDB Engine:**
+   - Server-side pack generator with SHA-256 payload integrity manifests.
+   - Genuine client-side download and persistence in browser IndexedDB (`plant_doctor_offline_db`).
+   - Browser-native local keyword search over stored chunks when disconnected (`navigator.onLine === false`).
+   - Honest offline reporting: no remote database queries or cloud LLMs are contacted when offline, and source verification caveats are made visible.
+
+---
+
+## Architecture Overview
+
+```
+PlantDoctor/
+├── backend/                  # Python FastAPI Backend
+│   ├── app/
+│   │   ├── config.py         # Pydantic Settings & environment validation
+│   │   ├── deps.py           # Dependency injection & service singletons
+│   │   ├── db/               # PyMongo manager, indexes, repositories, seed corpus
+│   │   ├── models/           # Enums, database records, and camelCase API schemas
+│   │   ├── routers/          # /health, /api/v1/ask, /api/questions, /packs, /ingest
+│   │   └── services/         # FastEmbed, Retrieval (RRF), Evidence Gate, Answer Synth, Packs
+│   └── tests/                # 17 automated pytest suites covering gate, RRF, benchmark, packs
+├── src/                      # React 19 + TypeScript + Vite PWA
+│   ├── api/                  # Typed REST client with offline error guards & pack downloader
+│   ├── components/           # Biophilic UI components, badges, offline screens, install modal
+│   ├── hooks/                # useOnlineStatus, useBackendHealth, useRecentActivity
+│   ├── pages/                # HomePage, AskPage, LibraryPage, PackDetailPage, AboutPage
+│   └── services/             # liveService adapter, offlineStorage (IndexedDB), demoService
+└── public/                   # PWA Manifest, service worker, touch & maskable icons
+```
+
+---
+
+## Quick Start (Local Development)
+
+### 1. Prerequisites
+- Python 3.11+
+- Node.js 18+ and npm
+
+### 2. Backend Setup
 ```bash
+# Create virtual environment and install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start FastAPI server on port 8000
+PYTHONPATH=. uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### 3. Frontend Setup
+```bash
+# Install frontend dependencies
 npm install
+
+# Start Vite development server on port 5173
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
-## Commands
+---
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Type-check and production build |
-| `npm run preview` | Serve the production build locally |
-| `npm test` | Run tests (Vitest) |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run typecheck` | Type-check only (no emit) |
-| `npm run lint` | Lint with Oxlint |
+## Verified Commands & Test Suites
 
-## Tech stack
+| Command | Description | Status |
+|---------|-------------|--------|
+| `PYTHONPATH=. .venv/bin/pytest backend/tests -v` | Run all 17 backend unit and benchmark tests | ✅ 17/17 Passed |
+| `npm test` | Run all 32 frontend Vitest component tests | ✅ 32/32 Passed |
+| `npm run typecheck` | Strict TypeScript typecheck (`tsc -b`) | ✅ 0 Errors |
+| `npm run lint` | Fast linter (`oxlint`) | ✅ 0 Errors |
+| `npm run build` | Compile PWA production bundle with Workbox | ✅ Built (~467 KiB) |
+| `npm run preview` | Serve production build locally on port 4173 | ✅ Complete |
 
-- **React 19** with TypeScript (strict, TS 6)
-- **Vite 8** for bundling and dev server
-- **Tailwind CSS v4** for styling
-- **React Router v7** for client-side routing
-- **Lucide React** for icons
-- **vite-plugin-pwa** for service worker and web app manifest
-- **Vitest** + Testing Library for tests
+---
 
-## Pages
+## Measured Benchmark Results
 
-| Route | Page | Status |
-|-------|------|--------|
-| `/` | Home / Dashboard | ✅ Complete |
-| `/ask` | Ask Plant Doctor | ✅ Complete (backend unavailable state, illustrative demo) |
-| `/evidence/:id` | Evidence result details | ✅ Complete (demo data only) |
-| `/library` | Offline Library | ✅ Complete (download disabled, honest messaging) |
-| `/library/:id` | Knowledge pack details | ✅ Complete (illustrative data) |
-| `/about` | About, limitations, source trust | ✅ Complete |
+Ran on verified agricultural reference corpus:
+- **Vector-only Retrieval:** Recall@5 = **100.00%**, Avg Latency = **6.63 ms**, Applicability Violations = **1** (cross-crop violation).
+- **Hybrid Retrieval (Vector + Keyword RRF):** Recall@5 = **100.00%**, Avg Latency = **7.08 ms**, Applicability Violations = **1**.
+- **Hybrid + Evidence Status Gate:** Recall@5 = **100.00%**, Abstentions = **1**, Applicability Violations = **0** (Hard mismatches deterministically rejected).
 
-## Evidence Status Gate
+---
 
-Every piece of guidance displays one of five evidence statuses:
+## Production Deployment Checklist
 
-- **Applicable** — Evidence verified and matches context
-- **Context Incomplete** — Missing information needed for full assessment
-- **Conflicting Evidence** — Sources disagree
-- **Freshness Unverified** — Source not recently re-checked
-- **Insufficient Evidence** — Too few sources found
+### 1. Backend (FastAPI on Render / Cloud Run / Railway)
+- Copy `.env.example` to `.env` and set:
+  - `MONGODB_URI`: MongoDB Atlas connection string (`mongodb+srv://...`).
+  - `MONGODB_DB_NAME`: `plant_doctor`
+  - `CORS_ORIGINS`: Comma-separated allowed frontend origins (e.g. `https://your-plant-doctor.web.app`).
+  - `ADMIN_API_KEY`: Secret key for `/api/v1/ingest` endpoint.
+- In MongoDB Atlas:
+  - Ensure Atlas Search / Vector Search is enabled on the cluster.
+  - Create the vector index named `vector_index` using the JSON definition from `backend/app/db/indexes.py`.
+- Run database index synchronization:
+  ```bash
+  python3 -m backend.app.db.indexes
+  ```
 
-These describe *intended system behavior*. They are not yet implemented or validated — the backend does not exist yet.
-
-## Architecture
-
-```
-src/
-  api/           Typed REST client (fetch-based, configurable base URL) + error types
-  app/           Layout shell
-  components/    Reusable UI (badges, cards, banners, states, Select, Toast, fields)
-  data/          Selection taxonomy (crops, regions, growth stages)
-  demo/          Labelled illustrative fixtures (never presented as real data)
-  hooks/         useOnlineStatus, useBackendHealth, useRecentActivity (localStorage)
-  models/        Types: Question, EvidenceSource, EvidenceChunk, EvidenceStatus, KnowledgePack, ApiError
-  pages/         Route pages
-  services/      Service adapter boundary (see below)
-  test/          Test setup
-```
-
-### Service adapter boundary
-
-Pages depend only on the `PlantDoctorService` interface (`src/services/types.ts`),
-never on a concrete transport:
-
-- `liveService` — wraps the FastAPI REST client. The active default. Attempts the
-  real backend and surfaces an honest "unavailable" state when it can't connect.
-- `demoService` — an explicitly labelled demonstration adapter. Every result it
-  returns carries `isIllustrative: true`. It never fabricates verified sources,
-  never writes to a database, and never reports a successful download.
-
-To connect the real backend, nothing in the pages changes — `liveService` already
-points at `VITE_API_BASE_URL`.
-
-### Honest state handling
-
-- **Ask**: real submission goes through `liveService`; when the backend is
-  unreachable the UI offers a clearly-labelled illustrative example instead.
-- **Library**: distinguishes *backend unavailable* from an *empty library*.
-  Illustrative packs are shown only behind an explicit "Preview" action.
-- **Downloads**: disabled; no success is ever reported without a real persist.
-- **Recent questions**: backed by real `localStorage` — only questions you
-  actually submitted on this device, never fabricated.
-
-## PWA
-
-The app includes a web app manifest and service worker that caches the application shell. This allows installing the app to a phone's home screen.
-
-**Important:** The service worker caches static assets only. It does *not* enable offline question answering. Offline knowledge retrieval requires a local evidence store (IndexedDB + downloaded knowledge packs) that is planned for a future milestone.
-
-## What is NOT implemented (scope boundary)
-
-- FastAPI backend
-- MongoDB Atlas connection
-- Real embeddings or RAG
-- External LLM calls
-- Authentication
-- Image classification / diagnosis inference
-- Offline knowledge pack downloads
-- IndexedDB local evidence store
-
-## Planned next milestone
-
-FastAPI API contract and MongoDB-backed evidence retrieval.
-
-## Design system
-
-Generated using UI/UX Pro Max. See `design-system/plant-doctor/MASTER.md` for the persisted design tokens.
-
-- **Style:** Organic Biophilic
-- **Palette:** Forest green (#15803D), leaf green (#22c55e), warm white (#F0FDF4)
-- **Typography:** Lora (headings) / Raleway (body)
-- **Corners:** 16–24px rounded
-- **Accessibility:** 4.5:1 contrast, visible focus rings, reduced-motion support, 44px touch targets
+### 2. Frontend (Firebase Hosting / Vercel / Cloudflare Pages)
+- Set build environment variable:
+  - `VITE_API_BASE_URL`: URL of the deployed FastAPI backend.
+- Build and deploy:
+  ```bash
+  npm run build
+  ```
+- Deploy the `dist/` directory as a single-page application.

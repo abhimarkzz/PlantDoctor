@@ -11,8 +11,11 @@ import {
   RefreshCw,
   ShieldCheck,
   Hash,
+  Trash2,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
-import { demoService } from '../services';
+import { activeService, demoService } from '../services';
 import type { KnowledgePack } from '../models/types';
 import { EmptyState } from '../components/EmptyState';
 import { IllustrativeBanner } from '../components/IllustrativeBanner';
@@ -33,20 +36,61 @@ export function PackDetailPage() {
   const { notify } = useToast();
   const [pack, setPack] = useState<KnowledgePack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+
+  async function loadPack() {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const p = await activeService.getPack(id);
+      setPack(p);
+      setIsDemo(false);
+    } catch {
+      try {
+        const demoP = await demoService.getPack(id);
+        setPack(demoP);
+        setIsDemo(true);
+      } catch {
+        setPack(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    // Pack details only exist as illustrative previews in this milestone.
-    demoService
-      .getPack(id ?? '')
-      .then((p) => active && setPack(p))
-      .catch(() => active && setPack(null))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
+    void loadPack();
   }, [id]);
+
+  async function handleDownload() {
+    if (!pack || !activeService.downloadPack) return;
+    setIsDownloading(true);
+    try {
+      await activeService.downloadPack(pack.id);
+      notify(`Downloaded and saved '${pack.name}' to local IndexedDB.`, 'success');
+      await loadPack();
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Failed to download pack.', 'error');
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  async function handleRemove() {
+    if (!pack || !activeService.removePack) return;
+    setIsRemoving(true);
+    try {
+      await activeService.removePack(pack.id);
+      notify(`Removed '${pack.name}' from device storage.`, 'info');
+      await loadPack();
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Failed to remove pack.', 'error');
+    } finally {
+      setIsRemoving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -72,10 +116,12 @@ export function PackDetailPage() {
     );
   }
 
+  const isDownloaded = pack.status === 'downloaded';
+
   const statusLabel: Record<KnowledgePack['status'], string> = {
-    available: 'Available (not downloaded)',
+    available: 'Available on server',
     downloading: 'Downloading…',
-    downloaded: 'Downloaded',
+    downloaded: 'Installed locally (IndexedDB)',
     update_available: 'Update available',
   };
 
@@ -86,11 +132,17 @@ export function PackDetailPage() {
         Back to Library
       </Link>
 
-      <IllustrativeBanner />
+      {isDemo && <IllustrativeBanner />}
 
       <div>
         <div className="flex items-center gap-2 mb-2">
           <h1 className="font-heading text-2xl font-bold text-foreground">{pack.name}</h1>
+          {isDownloaded && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5">
+              <CheckCircle2 size={12} aria-hidden="true" />
+              Installed Offline
+            </span>
+          )}
         </div>
         <p className="text-muted-foreground text-sm leading-relaxed">{pack.description}</p>
         <p className="text-xs text-muted-foreground font-mono mt-2 inline-flex items-center gap-1">
@@ -102,10 +154,10 @@ export function PackDetailPage() {
       {/* Identity & status grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Tag, label: 'Version', value: pack.version },
+          { icon: Tag, label: 'Version', value: `v${pack.version}` },
           { icon: HardDrive, label: 'Size', value: formatBytes(pack.sizeBytes) },
           { icon: MapPin, label: 'Region', value: pack.region ?? 'Global' },
-          { icon: Download, label: 'Download status', value: statusLabel[pack.status] },
+          { icon: Download, label: 'Storage status', value: statusLabel[pack.status] },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -149,34 +201,75 @@ export function PackDetailPage() {
       {/* Source count */}
       <div className="rounded-xl bg-muted p-4">
         <p className="text-sm text-muted-foreground">
-          This pack references <strong className="text-foreground">{pack.sourceCount} sources</strong>.
-          Source provenance and verification metadata will be available after the backend is connected.
+          This pack bundles <strong className="text-foreground">{pack.sourceCount} verified source documents</strong> and passages.
+          When installed, its passages can be queried directly from your device without network connectivity.
         </p>
       </div>
 
-      {/* Download — disabled with explanation; shows no fake success */}
-      <div className="rounded-2xl border-2 border-dashed border-border p-6 text-center">
-        <button
-          type="button"
-          onClick={() => notify('Downloads are not available in this milestone — no pack was installed.', 'info')}
-          className="inline-flex items-center gap-2 rounded-xl bg-muted px-6 py-3 text-sm font-medium text-muted-foreground cursor-pointer"
-        >
-          <Download size={18} aria-hidden="true" />
-          Download for offline use
-        </button>
-        <p className="text-xs text-muted-foreground mt-3">
-          Not available in this milestone. Offline pack storage requires MongoDB Atlas and a local IndexedDB evidence store.
-          No download or persistence occurs, and no success will be reported.
-        </p>
+      {/* Real Download / Delete Action Card */}
+      <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-3">
+        {isDownloaded ? (
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200 text-sm font-medium">
+              <CheckCircle2 size={18} aria-hidden="true" />
+              Pack is stored in IndexedDB and available offline
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={isRemoving}
+                className="inline-flex items-center gap-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 px-5 py-2.5 text-sm font-medium hover:bg-destructive/20 cursor-pointer disabled:opacity-50"
+              >
+                {isRemoving ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                Remove from device
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Removing the pack frees browser storage. You can reinstall it anytime from the server.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isDownloading || isDemo}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-medium text-on-primary hover:bg-primary-dark cursor-pointer disabled:opacity-50 shadow-sm transition-all"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                  Downloading & verifying checksum…
+                </>
+              ) : (
+                <>
+                  <Download size={18} aria-hidden="true" />
+                  Download for offline use
+                </>
+              )}
+            </button>
+            {isDemo ? (
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Not available in this milestone for illustrative previews. Real packs from the connected backend can be downloaded into IndexedDB.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Downloads the complete manifest, verified sources, and text chunks directly into local IndexedDB storage.
+                Integrity is verified via SHA-256 before persistence.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Known offline limitations */}
       <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
         <h2 className="font-heading text-base font-semibold text-foreground mb-2">Known offline limitations</h2>
         <ul className="text-sm text-foreground/80 space-y-1.5">
-          <li className="flex gap-2"><span className="text-amber-600">•</span>Offline evidence can only be as current as the last successful synchronization.</li>
-          <li className="flex gap-2"><span className="text-amber-600">•</span>Cloud retrieval and generation require connectivity and are unavailable offline.</li>
-          <li className="flex gap-2"><span className="text-amber-600">•</span>A cached app shell does not enable offline question answering on its own.</li>
+          <li className="flex gap-2"><span className="text-amber-600">•</span>Offline evidence is as current as the last successful synchronization ({formatTime(pack.lastSynced)}).</li>
+          <li className="flex gap-2"><span className="text-amber-600">•</span>Cloud models and live database vectors require connectivity; offline answers use deterministic passage matching.</li>
+          <li className="flex gap-2"><span className="text-amber-600">•</span>Always confirm chemical regulations with local agricultural authorities before application.</li>
         </ul>
       </div>
     </div>

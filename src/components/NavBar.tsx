@@ -1,5 +1,13 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, MessageCircleQuestion, BookOpen, Info, Leaf } from 'lucide-react';
+import { Home, MessageCircleQuestion, BookOpen, Info, Leaf, Download, WifiOff } from 'lucide-react';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { InstallModal } from './InstallModal';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', icon: Home },
@@ -9,6 +17,19 @@ const NAV_ITEMS = [
 ] as const;
 
 export function NavBar() {
+  const isOnline = useOnlineStatus();
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    function handleBeforeInstallPrompt(e: Event) {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -16,9 +37,29 @@ export function NavBar() {
         aria-label="Main navigation"
         className="hidden md:flex flex-col w-64 shrink-0 border-r border-border bg-card min-h-screen"
       >
-        <div className="flex items-center gap-2.5 px-6 py-5 border-b border-border">
-          <Leaf size={28} className="text-primary" aria-hidden="true" />
-          <span className="font-heading text-xl font-bold text-foreground">Plant Doctor</span>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <Leaf size={28} className="text-primary" aria-hidden="true" />
+            <span className="font-heading text-xl font-bold text-foreground">Plant Doctor</span>
+          </div>
+        </div>
+
+        {/* Live status badge */}
+        <div className="px-6 py-2.5 border-b border-border/60 bg-muted/30">
+          <div className="flex items-center gap-2 text-xs" data-testid="nav-online-status">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isOnline ? 'bg-green-600 animate-pulse' : 'bg-amber-600'
+              }`}
+              aria-hidden="true"
+            />
+            <span className="font-medium text-foreground">
+              {isOnline ? 'Network Online' : 'Offline Mode'}
+            </span>
+            <span className="text-muted-foreground ml-auto text-[11px]">
+              {isOnline ? 'Ready' : 'Cached Shell'}
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1 px-3 py-4 flex-1">
@@ -41,10 +82,34 @@ export function NavBar() {
           ))}
         </div>
 
-        <div className="px-6 py-4 border-t border-border text-xs text-muted-foreground">
+        {/* Install PWA action */}
+        <div className="px-4 py-3 border-t border-border">
+          <button
+            type="button"
+            onClick={() => setShowInstallModal(true)}
+            aria-label="Install Plant Doctor PWA"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Download size={15} aria-hidden="true" />
+            <span>Install App (PWA)</span>
+          </button>
+        </div>
+
+        <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
           v0.1.0 — Frontend only
         </div>
       </nav>
+
+      {/* Mobile top status bar when offline */}
+      {!isOnline && (
+        <div
+          data-testid="mobile-offline-indicator"
+          className="md:hidden sticky top-0 left-0 right-0 z-40 bg-amber-600 text-white text-[11px] font-medium py-1.5 px-3 text-center flex items-center justify-center gap-1.5 shadow-xs"
+        >
+          <WifiOff size={12} aria-hidden="true" />
+          <span>Offline — Running from cached shell</span>
+        </div>
+      )}
 
       {/* Mobile bottom nav */}
       <nav
@@ -66,7 +131,25 @@ export function NavBar() {
             {label}
           </NavLink>
         ))}
+        <button
+          type="button"
+          onClick={() => setShowInstallModal(true)}
+          aria-label="Install App"
+          className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground cursor-pointer min-w-[64px]"
+        >
+          <Download size={22} aria-hidden="true" />
+          Install
+        </button>
       </nav>
+
+      {/* Install Guide Modal */}
+      <InstallModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        deferredPrompt={deferredPrompt}
+        onInstallSuccess={() => setDeferredPrompt(null)}
+      />
     </>
   );
 }
+

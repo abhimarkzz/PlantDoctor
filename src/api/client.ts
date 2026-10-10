@@ -1,4 +1,4 @@
-import type { AnswerResult, HealthResponse, KnowledgePack } from '../models/types';
+import type { AnswerResult, EvidenceChunk, HealthResponse, KnowledgePack, Source } from '../models/types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -15,13 +15,24 @@ export class ApiError extends Error {
 }
 
 export class BackendUnavailableError extends Error {
-  constructor() {
-    super('Backend is not connected');
+  constructor(message = 'Backend is not connected') {
+    super(message);
     this.name = 'BackendUnavailableError';
   }
 }
 
+export class DeviceOfflineError extends Error {
+  constructor(message = 'Device is offline. Network requests cannot be completed.') {
+    super(message);
+    this.name = 'DeviceOfflineError';
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new DeviceOfflineError();
+  }
+
   let res: Response;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
@@ -32,6 +43,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       },
     });
   } catch {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new DeviceOfflineError();
+    }
     throw new BackendUnavailableError();
   }
 
@@ -48,13 +62,38 @@ export async function checkHealth(): Promise<HealthResponse> {
   return request<HealthResponse>('/health');
 }
 
-/** Submit a question to the Plant Doctor */
-export async function askQuestion(query: string, imageFile?: File): Promise<AnswerResult> {
-  if (imageFile) {
-    // When image support exists, this will use FormData
+export interface AskQuestionOptions {
+  cropId?: string | null;
+  regionId?: string | null;
+  growthStageId?: string | null;
+  imageFile?: File;
+}
+
+export interface PackDownloadPayload {
+  pack: KnowledgePack;
+  sources: Source[];
+  chunks: EvidenceChunk[];
+}
+
+/** Submit a question to the Plant Doctor with complete context */
+export async function askQuestion(
+  query: string,
+  options?: AskQuestionOptions | File
+): Promise<AnswerResult> {
+  const opts: AskQuestionOptions =
+    options instanceof File ? { imageFile: options } : options ?? {};
+
+  if (opts.imageFile) {
     const formData = new FormData();
     formData.append('query', query);
-    formData.append('image', imageFile);
+    formData.append('image', opts.imageFile);
+    if (opts.cropId) formData.append('cropId', opts.cropId);
+    if (opts.regionId) formData.append('regionId', opts.regionId);
+    if (opts.growthStageId) formData.append('growthStageId', opts.growthStageId);
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new DeviceOfflineError();
+    }
 
     let res: Response;
     try {
@@ -63,6 +102,9 @@ export async function askQuestion(query: string, imageFile?: File): Promise<Answ
         body: formData,
       });
     } catch {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new DeviceOfflineError();
+      }
       throw new BackendUnavailableError();
     }
 
@@ -76,7 +118,12 @@ export async function askQuestion(query: string, imageFile?: File): Promise<Answ
 
   return request<AnswerResult>('/api/v1/ask', {
     method: 'POST',
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({
+      query,
+      cropId: opts.cropId,
+      regionId: opts.regionId,
+      growthStageId: opts.growthStageId,
+    }),
   });
 }
 
@@ -93,4 +140,9 @@ export async function listKnowledgePacks(): Promise<KnowledgePack[]> {
 /** Get details of a single knowledge pack */
 export async function getKnowledgePack(id: string): Promise<KnowledgePack> {
   return request<KnowledgePack>(`/api/v1/packs/${encodeURIComponent(id)}`);
+}
+
+/** Download complete knowledge pack with manifest, sources, and passages for offline use */
+export async function downloadKnowledgePackPayload(packId: string): Promise<PackDownloadPayload> {
+  return request<PackDownloadPayload>(`/api/v1/packs/${encodeURIComponent(packId)}/download`);
 }

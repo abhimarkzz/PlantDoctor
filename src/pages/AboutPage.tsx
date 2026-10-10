@@ -131,6 +131,51 @@ export function AboutPage() {
         </ul>
       </section>
 
+      {/* PWA Installation & Offline Shell */}
+      <section className="rounded-2xl border border-border bg-card p-6 space-y-4" data-testid="pwa-install-guide">
+        <div className="flex items-center gap-2 mb-1">
+          <Leaf size={20} className="text-primary" aria-hidden="true" />
+          <h2 className="font-heading text-lg font-semibold text-card-foreground">
+            Progressive Web App (PWA) & Offline Shell
+          </h2>
+        </div>
+        <p className="text-sm text-card-foreground/90 leading-relaxed">
+          Plant Doctor is built as a Progressive Web App (PWA). Once loaded in a modern browser, the service worker caches the application shell (HTML, JavaScript, CSS, icons, fonts) so you can reopen and use the app interface offline.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          {/* Android installation */}
+          <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2.5">
+            <h3 className="font-heading font-semibold text-sm text-foreground flex items-center gap-1.5">
+              <span>Android (Google Chrome / Edge)</span>
+            </h3>
+            <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside leading-relaxed">
+              <li>Open the app in Chrome or Edge on your Android phone.</li>
+              <li>Tap the three-dot menu icon (⋮) in the top-right corner.</li>
+              <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
+              <li>Confirm the prompt. Plant Doctor will install as a standalone app on your home screen.</li>
+            </ol>
+          </div>
+
+          {/* iOS installation */}
+          <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2.5">
+            <h3 className="font-heading font-semibold text-sm text-foreground flex items-center gap-1.5">
+              <span>iPhone / iPad (Apple Safari)</span>
+            </h3>
+            <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside leading-relaxed">
+              <li>Open the app in Safari (iOS requires Safari for home screen installation).</li>
+              <li>Tap the <strong>Share</strong> button (box with upward arrow) in the bottom toolbar.</li>
+              <li>Scroll down and tap <strong>"Add to Home Screen"</strong> (➕).</li>
+              <li>Tap <strong>Add</strong> in the top-right corner to save to your home screen.</li>
+            </ol>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed pt-2 border-t border-border">
+          <strong>Important distinction:</strong> Installing the PWA and caching the app shell allows the interface, navigation, forms, and cached reference materials to open offline. It does <em>not</em> enable offline AI queries or live retrieval until local pack storage (IndexedDB) and offline search are implemented.
+        </p>
+      </section>
+
       {/* Ethics */}
       <section className="rounded-2xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-3">

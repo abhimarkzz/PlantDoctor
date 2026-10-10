@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Send, ImagePlus, X, Eye, Loader2, AlertCircle } from 'lucide-react';
+import { Send, ImagePlus, X, Eye, Loader2, AlertCircle, WifiOff, ArrowLeft } from 'lucide-react';
 import { activeService, demoService } from '../services';
-import { BackendUnavailableError } from '../api/client';
+import { BackendUnavailableError, DeviceOfflineError } from '../api/client';
 import type { AnswerResult, Question } from '../models/types';
 import type { CropContext } from '../components/CropContextFields';
 import { CropContextFields } from '../components/CropContextFields';
@@ -10,11 +10,13 @@ import { EvidenceStatusBadge } from '../components/EvidenceStatusBadge';
 import { SourceCard } from '../components/SourceCard';
 import { IllustrativeBanner } from '../components/IllustrativeBanner';
 import { ErrorState } from '../components/ErrorState';
+import { OfflineServiceScreen } from '../components/OfflineServiceScreen';
 import { CardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { useRecentActivity } from '../hooks/useRecentActivity';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
-type PageState = 'idle' | 'loading' | 'result' | 'error';
+type PageState = 'idle' | 'loading' | 'result' | 'error' | 'offline';
 
 interface AskLocationState {
   context?: CropContext;
@@ -40,6 +42,7 @@ export function AskPage() {
 
   const { notify } = useToast();
   const { add: addRecent } = useRecentActivity();
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     return () => {
@@ -109,6 +112,10 @@ export function AskPage() {
         illustrative: answer.isIllustrative,
       });
     } catch (err) {
+      if (err instanceof DeviceOfflineError || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+        setState('offline');
+        return;
+      }
       if (err instanceof BackendUnavailableError) {
         setErrorMsg('The backend is not connected, so no real evidence can be retrieved. You can view a clearly-labelled illustrative example instead.');
       } else {
@@ -127,16 +134,21 @@ export function AskPage() {
     if (!validate()) return;
     const question = buildQuestion();
     setState('loading');
-    const answer = await demoService.ask(question);
-    setResult(answer);
-    setState('result');
-    addRecent({
-      query: question.query,
-      cropId: question.cropId,
-      regionId: question.regionId,
-      illustrative: true,
-    });
-    notify('Showing an illustrative example — not real guidance.', 'info');
+    try {
+      const answer = await demoService.ask(question);
+      setResult(answer);
+      setState('result');
+      addRecent({
+        query: question.query,
+        cropId: question.cropId,
+        regionId: question.regionId,
+        illustrative: true,
+      });
+      notify('Showing an illustrative example — not real guidance.', 'info');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not load illustrative example.');
+      setState('error');
+    }
   }
 
   return (
@@ -149,6 +161,21 @@ export function AskPage() {
           Describe a plant health issue. Crop and region help assess how applicable the evidence is.
         </p>
       </div>
+
+      {!isOnline && (
+        <div
+          data-testid="ask-offline-banner"
+          className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs md:text-sm text-amber-900"
+        >
+          <WifiOff size={18} className="text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="space-y-0.5">
+            <p className="font-semibold">Device is offline — Application shell cached</p>
+            <p className="text-amber-800/90 leading-relaxed">
+              You can draft questions and test the context form while offline. Live question submission requires an active network connection. You can also view offline illustrative examples.
+            </p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div>
@@ -263,6 +290,42 @@ export function AskPage() {
         <div className="space-y-4">
           <CardSkeleton />
           <CardSkeleton />
+        </div>
+      )}
+
+      {state === 'offline' && (
+        <div className="space-y-4" data-testid="ask-offline-screen">
+          <OfflineServiceScreen
+            title="Question submission unavailable offline"
+            message="You are currently offline. Querying live agricultural evidence requires an active network connection to reach the backend services. Your question draft has been preserved so you can submit as soon as connectivity is restored."
+            onRetry={() => {
+              if (navigator.onLine) {
+                void runSubmit();
+              } else {
+                notify('Still offline. Please reconnect to the internet to submit.', 'info');
+              }
+            }}
+            secondaryAction={
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleViewDemo}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Eye size={16} aria-hidden="true" />
+                  View illustrative example
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setState('idle')}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <ArrowLeft size={16} aria-hidden="true" />
+                  Edit question
+                </button>
+              </div>
+            }
+          />
         </div>
       )}
 

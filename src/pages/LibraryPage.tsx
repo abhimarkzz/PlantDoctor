@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, HardDrive, MapPin, ArrowRight, ServerOff, Eye, Search, Inbox } from 'lucide-react';
+import { BookOpen, HardDrive, MapPin, ArrowRight, ServerOff, Eye, Search, Inbox, WifiOff } from 'lucide-react';
 import { activeService, demoService } from '../services';
-import { BackendUnavailableError } from '../api/client';
+import { BackendUnavailableError, DeviceOfflineError } from '../api/client';
 import type { KnowledgePack } from '../models/types';
 import { CardSkeleton } from '../components/Skeleton';
 import { ErrorState } from '../components/ErrorState';
+import { OfflineServiceScreen } from '../components/OfflineServiceScreen';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
-type LibraryState = 'loading' | 'ready' | 'empty' | 'unavailable' | 'error';
+type LibraryState = 'loading' | 'ready' | 'empty' | 'unavailable' | 'offline' | 'error';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -16,6 +18,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function LibraryPage() {
+  const isOnline = useOnlineStatus();
   const [state, setState] = useState<LibraryState>('loading');
   const [packs, setPacks] = useState<KnowledgePack[]>([]);
   const [isPreview, setIsPreview] = useState(false);
@@ -23,6 +26,18 @@ export function LibraryPage() {
   const [search, setSearch] = useState('');
 
   async function load() {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      try {
+        const localPacks = await activeService.listPacks();
+        setPacks(localPacks);
+        setState(localPacks.length === 0 ? 'offline' : 'ready');
+      } catch {
+        setState('offline');
+      }
+      setIsPreview(false);
+      return;
+    }
+
     setState('loading');
     setIsPreview(false);
     try {
@@ -30,7 +45,24 @@ export function LibraryPage() {
       setPacks(result);
       setState(result.length === 0 ? 'empty' : 'ready');
     } catch (err) {
-      if (err instanceof BackendUnavailableError) {
+      if (err instanceof DeviceOfflineError || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+        try {
+          const localPacks = await activeService.listPacks();
+          setPacks(localPacks);
+          setState(localPacks.length === 0 ? 'offline' : 'ready');
+        } catch {
+          setState('offline');
+        }
+      } else if (err instanceof BackendUnavailableError) {
+        // Check if there are local packs
+        try {
+          const localPacks = await activeService.listPacks();
+          if (localPacks.length > 0) {
+            setPacks(localPacks);
+            setState('ready');
+            return;
+          }
+        } catch {}
         setState('unavailable');
       } else {
         setErrorMsg(err instanceof Error ? err.message : 'Could not load the library.');
@@ -74,6 +106,18 @@ export function LibraryPage() {
         </p>
       </div>
 
+      {!isOnline && (
+        <div
+          data-testid="library-offline-banner"
+          className="flex items-center gap-2.5 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs md:text-sm text-amber-900"
+        >
+          <WifiOff size={18} className="text-amber-700 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>Offline mode:</strong> The app shell is active. Remote catalog discovery requires an internet connection.
+          </span>
+        </div>
+      )}
+
       {state === 'loading' && (
         <div className="space-y-4">
           <CardSkeleton />
@@ -82,6 +126,27 @@ export function LibraryPage() {
       )}
 
       {state === 'error' && <ErrorState message={errorMsg} onRetry={() => void load()} />}
+
+      {/* Offline screen — helpful, honest, and preserves the offline shell */}
+      {state === 'offline' && (
+        <div className="space-y-5" data-testid="library-offline-screen">
+          <OfflineServiceScreen
+            title="Knowledge pack catalog unavailable offline"
+            message="You are currently offline. Discovering, inspecting, and synchronizing knowledge packs requires an active network connection. The application shell is loaded from browser cache, but no packs are currently saved locally on this device."
+            onRetry={() => void load()}
+            secondaryAction={
+              <button
+                type="button"
+                onClick={showPreview}
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer"
+              >
+                <Eye size={16} aria-hidden="true" />
+                Preview illustrative packs
+              </button>
+            }
+          />
+        </div>
+      )}
 
       {/* Backend unavailable — distinct from an empty library */}
       {state === 'unavailable' && (
@@ -158,7 +223,14 @@ export function LibraryPage() {
                     <BookOpen size={24} aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-heading text-base font-semibold text-card-foreground mb-1">{pack.name}</h2>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="font-heading text-base font-semibold text-card-foreground">{pack.name}</h2>
+                      {pack.status === 'downloaded' && (
+                        <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5">
+                          Installed
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{pack.description}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
                       {pack.region && (

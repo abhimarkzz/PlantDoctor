@@ -12,20 +12,20 @@ export function SourceCard({ chunk }: Props) {
   return (
     <article className="rounded-2xl border border-border bg-card p-5 transition-shadow duration-200 hover:shadow-md">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-        <h3 className="font-heading text-base font-semibold text-card-foreground leading-snug flex-1 min-w-0">
+        <h3 className="font-heading text-base font-semibold text-card-foreground leading-snug flex-1 min-w-0 break-words">
           {source.title}
         </h3>
         <EvidenceStatusBadge status={chunk.status} />
       </div>
 
-      <p className="text-sm text-card-foreground/90 leading-relaxed mb-4 border-l-2 border-primary/30 pl-3">
+      <p className="text-sm text-card-foreground/90 leading-relaxed mb-4 border-l-2 border-primary/30 pl-3 break-words">
         "{chunk.text}"
       </p>
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-xs text-muted-foreground">
         {chunk.pageOrSection && <span>📄 {chunk.pageOrSection}</span>}
         {source.identifier && (
-          <span className="font-mono rounded bg-muted px-1.5 py-0.5">{source.identifier}</span>
+          <span className="font-mono rounded bg-muted px-1.5 py-0.5 break-all">{source.identifier}</span>
         )}
       </div>
 

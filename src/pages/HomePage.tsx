@@ -90,21 +90,23 @@ export function HomePage() {
 
       {/* Status area: connection + offline library */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card p-4" data-testid="home-connection-card">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Connection</p>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm" data-testid="home-connection-status">
             <span
               className={`inline-block w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-amber-500'}`}
               aria-hidden="true"
             />
-            <span className="text-foreground">{isOnline ? 'Online' : 'Offline'}</span>
+            <span className="text-foreground font-medium">{isOnline ? 'Online' : 'Offline'}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">
-              {backendStatus === 'connected'
-                ? 'Backend connected'
-                : backendStatus === 'checking'
-                  ? 'Checking backend…'
-                  : 'Backend not connected'}
+              {!isOnline
+                ? 'App shell cached (offline mode)'
+                : backendStatus === 'connected'
+                  ? 'Backend connected'
+                  : backendStatus === 'checking'
+                    ? 'Checking backend…'
+                    : 'Backend not connected'}
             </span>
           </div>
         </div>

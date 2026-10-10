@@ -21,4 +21,10 @@ export interface PlantDoctorService {
 
   /** Retrieve a single pack by id. */
   getPack(id: string): Promise<KnowledgePack>;
+
+  /** Download a knowledge pack for offline use and persist in IndexedDB. */
+  downloadPack?(id: string): Promise<void>;
+
+  /** Remove an installed pack from local device storage. */
+  removePack?(id: string): Promise<void>;
 }
