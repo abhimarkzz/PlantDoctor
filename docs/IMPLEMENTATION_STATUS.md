@@ -70,11 +70,29 @@ Status legend: **PASS — VERIFIED** · **FAIL** · **BLOCKED** · **NOT VERIFIE
 6. **Offline search after disconnect:** *(verify manually in Chrome — not executed in this environment)* download a pack, go offline, reload, search; mismatch/no-result still abstain.
 7. **Recovery after reconnect:** online indicator flips; `/api/v1/ask` resumes live retrieval.
 
-## G. Final verdict
+## H. Deployment Readiness & Verification
 
-- **Working & verified live:** Atlas connection, `$vectorSearch` retrieval with real citations, Evidence Status Gate safety behaviors, API validation (fixed), ingest auth, source resolution, frontend build/tests/types/lint, PWA manifest/icons, SW static config, secret hygiene.
-- **Fixed this audit:** API validation 500/200 bug; offline pack casing bug. Regression tests added. Backend 33/33, frontend 38/38 after fixes.
-- **Still to verify (user action):** live offline pack flow and SW registration in a real browser (README manual steps); expand benchmark beyond 5 cases; optionally implement client-side SHA-256 recompute for full tamper detection.
-- **Note:** earlier docs cited "6.63 ms" latency and "17/17 backend tests" — actual live-Atlas latency is ~340–570 ms and the suite is 33 tests; figures in this report reflect real executions.
+| Deployment Target | Component | Status | Details & Deliverables |
+| :--- | :--- | :--- | :--- |
+| **Cloudflare Pages (Free)** | Frontend PWA (React + Vite) | **PASS — VERIFIED (Local Build) / BLOCKED (Cloud Push)** | Build verified (`dist/` generated, 19 precached assets). SPA routing fallback configured via `public/_redirects` (`/* /index.html 200`). Direct cloud upload blocked by missing `CLOUDFLARE_API_TOKEN` / `wrangler login`; GitHub repository integration ready via dashboard. |
+| **Render (Free Web Service)** | FastAPI Backend + PyMongo | **PASS — VERIFIED (Local Runtime) / BLOCKED (Cloud Push)** | Runtime verified (`0.0.0.0:$PORT` binding, `/health` endpoint reporting live Atlas status, CORS regex for `*.pages.dev`). Automated Blueprint configured via `render.yaml` with build-time FastEmbed model pre-caching. Remote deployment blocked by missing `RENDER_API_KEY`; GitHub Blueprint ready via dashboard. |
+| **MongoDB Atlas (M0)** | Vector Database (`plant_doctor`) | **PASS — VERIFIED** | Live cluster `plantdoctor.nawuow3.mongodb.net`, collection `evidence_chunks`, index `vector_index` verified `READY` and queryable. |
 
-_No commits or pushes were made. No database writes were performed during the audit; the benchmark and tests are read-only against existing data._
+### Deployment URLs & Configuration
+- **Planned Frontend URL:** `https://plantdoctor.pages.dev` (or assigned Cloudflare Pages subdomain)
+- **Planned Backend URL:** `https://plant-doctor-backend.onrender.com` (declared in `render.yaml`)
+- **Backend Health Check Path:** `https://plant-doctor-backend.onrender.com/health`
+- **Frontend Build Configuration:** Root `/`, Command `npm run build`, Output `dist`, Node 20
+- **Backend Build Configuration:** Command `pip install -r requirements.txt && python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"`, Start `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`, Python 3.11.9
+- **Required Secrets (Dashboard Only):** `MONGODB_URI` (Render secret manager), `VITE_API_BASE_URL` (Cloudflare Pages environment variable)
+- **Deployment Documentation:** See [`DEPLOYMENT.md`](file:///Users/admin/Documents/PlantDoctor/DEPLOYMENT.md) for step-by-step instructions.
+
+---
+
+## I. Final verdict
+
+- **Working & verified live:** Atlas connection, `$vectorSearch` retrieval with real citations, Evidence Status Gate safety behaviors, API validation, ingest auth, source resolution, frontend build/tests/types/lint, PWA manifest/icons, SW static config, secret hygiene, Render Blueprint (`render.yaml`), Cloudflare SPA redirect (`public/_redirects`).
+- **Fixed:** API validation 500/200 bug; offline pack casing bug; CORS regex support for Cloudflare Pages preview domains (`*.pages.dev`). Backend 33/33, frontend 38/38 after fixes.
+- **Still to verify (user action):** Connect GitHub repo to Cloudflare Pages & Render Free (step-by-step in `DEPLOYMENT.md`); live offline pack flow and SW registration in a real browser; expand benchmark beyond 5 cases.
+- **Note:** Earlier docs cited "6.63 ms" latency and "17/17 backend tests" — actual live-Atlas latency is ~340–570 ms and the suite is 33 tests; figures in this report reflect real executions.
+

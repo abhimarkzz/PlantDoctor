@@ -24,6 +24,10 @@ class Settings(BaseSettings):
         ],
         alias="CORS_ORIGINS",
     )
+    cors_origin_regex: Optional[str] = Field(
+        default=r"^https:\/\/.*\.pages\.dev$",
+        alias="CORS_ORIGIN_REGEX",
+    )
 
     # MongoDB Atlas
     mongodb_uri: Optional[str] = Field(default=None, alias="MONGODB_URI")

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: plant-doctor-backend
+    runtime: python
+    plan: free
+    region: oregon # or frankfurt, ohio, singapore
+    branch: main
+    buildCommand: pip install -r requirements.txt && python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: FASTAPI_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: MONGODB_DB_NAME
+        value: plant_doctor
+      - key: MONGODB_URI
+        sync: false
+      - key: EMBEDDING_MODEL
+        value: BAAI/bge-small-en-v1.5
+      - key: EMBEDDING_DIMENSION
+        value: "384"
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,http://localhost:4173"
+      - key: CORS_ORIGIN_REGEX
+        value: "^https:\\/\\/.*\\.pages\\.dev$"
