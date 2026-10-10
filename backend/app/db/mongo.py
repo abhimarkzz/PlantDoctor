@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, Tuple
+import certifi
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
@@ -23,9 +24,10 @@ def get_mongo_client() -> Optional[MongoClient]:
         try:
             _client = MongoClient(
                 settings.mongodb_uri,
-                serverSelectionTimeoutMS=2000,
-                connectTimeoutMS=2000,
-                socketTimeoutMS=3000,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=5000,
+                tlsCAFile=certifi.where(),
                 appname="PlantDoctor",
             )
         except Exception as e:

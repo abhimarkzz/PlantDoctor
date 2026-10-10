@@ -63,30 +63,33 @@ def init_services(db: Optional[Database] = None):
     _answer_service = AnswerService(_retrieval_service, _source_repo, evidence_gate)
     _pack_service = KnowledgePackService(_pack_repo, _source_repo, _chunk_repo)
 
-    # Seed baseline corpus if repository is empty
-    if _source_repo.count() == 0:
-        logger.info("Initializing baseline agricultural evidence corpus...")
-        seed_database_corpus(_ingestion_service)
+    # Seed baseline corpus if repository is empty and database reachable
+    try:
+        if _source_repo.count() == 0:
+            logger.info("Initializing baseline agricultural evidence corpus...")
+            seed_database_corpus(_ingestion_service)
 
-    # Build seed knowledge packs if pack repo is empty
-    if _pack_repo.count() == 0:
-        logger.info("Generating baseline versioned knowledge packs...")
-        _pack_service.build_pack(
-            pack_id="pack-veg-001",
-            name="Solanaceous & Tropical Vegetables",
-            description="Diagnostic evidence and nutrient disorder management for tomato, pepper, and eggplant.",
-            version="1.0.0",
-            crop_categories=["Tomato", "Pepper", "Eggplant"],
-            region="Tropical / Sub-tropical",
-        )
-        _pack_service.build_pack(
-            pack_id="pack-rice-001",
-            name="Lowland Paddy Rice Pathology",
-            description="Blast prevention and water regulation for tropical flooded lowland rice.",
-            version="1.0.0",
-            crop_categories=["Rice"],
-            region="Tropical",
-        )
+        # Build seed knowledge packs if pack repo is empty
+        if _pack_repo.count() == 0:
+            logger.info("Generating baseline versioned knowledge packs...")
+            _pack_service.build_pack(
+                pack_id="pack-veg-001",
+                name="Solanaceous & Tropical Vegetables",
+                description="Diagnostic evidence and nutrient disorder management for tomato, pepper, and eggplant.",
+                version="1.0.0",
+                crop_categories=["Tomato", "Pepper", "Eggplant"],
+                region="Tropical / Sub-tropical",
+            )
+            _pack_service.build_pack(
+                pack_id="pack-rice-001",
+                name="Lowland Paddy Rice Pathology",
+                description="Blast prevention and water regulation for tropical flooded lowland rice.",
+                version="1.0.0",
+                crop_categories=["Rice"],
+                region="Tropical",
+            )
+    except Exception as e:
+        logger.warning("Could not verify or initialize seed corpus on startup: %s", e)
 
 
 def get_source_repo() -> SourceRepository:
