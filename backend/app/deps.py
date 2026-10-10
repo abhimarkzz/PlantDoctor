@@ -18,6 +18,8 @@ from .services.ingestion import IngestionService
 from .services.pack_service import KnowledgePackService
 from .services.retrieval import RetrievalService
 
+from .services.multimodal_service import MultimodalService
+
 logger = logging.getLogger("plantdoctor.deps")
 
 # Global singleton repository and service instances
@@ -29,12 +31,13 @@ _retrieval_service: Optional[RetrievalService] = None
 _answer_service: Optional[AnswerService] = None
 _ingestion_service: Optional[IngestionService] = None
 _pack_service: Optional[KnowledgePackService] = None
+_multimodal_service: Optional[MultimodalService] = None
 
 
 def reset_services():
     """Resets global service and repository singletons."""
     global _source_repo, _chunk_repo, _pack_repo, _eval_repo
-    global _retrieval_service, _answer_service, _ingestion_service, _pack_service
+    global _retrieval_service, _answer_service, _ingestion_service, _pack_service, _multimodal_service
     _source_repo = None
     _chunk_repo = None
     _pack_repo = None
@@ -43,12 +46,13 @@ def reset_services():
     _answer_service = None
     _ingestion_service = None
     _pack_service = None
+    _multimodal_service = None
 
 
 def init_services(db: Optional[Database] = None):
     """Initializes repositories and services, and seeds the authentic corpus if empty."""
     global _source_repo, _chunk_repo, _pack_repo, _eval_repo
-    global _retrieval_service, _answer_service, _ingestion_service, _pack_service
+    global _retrieval_service, _answer_service, _ingestion_service, _pack_service, _multimodal_service
 
     if db is None:
         db = get_database()
@@ -62,6 +66,8 @@ def init_services(db: Optional[Database] = None):
     _retrieval_service = RetrievalService(_chunk_repo, db)
     _answer_service = AnswerService(_retrieval_service, _source_repo, evidence_gate)
     _pack_service = KnowledgePackService(_pack_repo, _source_repo, _chunk_repo)
+    _multimodal_service = MultimodalService(_retrieval_service, _source_repo, evidence_gate)
+
 
     # Seed baseline corpus if repository is empty and database reachable
     try:
@@ -132,3 +138,10 @@ def get_pack_service() -> KnowledgePackService:
     if _pack_service is None:
         init_services()
     return _pack_service
+
+
+def get_multimodal_service() -> MultimodalService:
+    if _multimodal_service is None:
+        init_services()
+    return _multimodal_service
+

@@ -37,6 +37,7 @@ export const liveService: PlantDoctorService = {
       regionId: question.regionId,
       growthStageId: question.growthStageId,
       imageFile: image,
+      language: question.language,
     });
   },
 

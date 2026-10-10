@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, MessageCircleQuestion, BookOpen, Info, Leaf, Download, WifiOff } from 'lucide-react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { InstallModal } from './InstallModal';
+import { LanguageSelector } from './LanguageSelector';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -82,6 +83,11 @@ export function NavBar() {
           ))}
         </div>
 
+        {/* Language Selector */}
+        <div className="px-4 py-3 border-t border-border">
+          <LanguageSelector variant="dropdown" className="w-full justify-between" />
+        </div>
+
         {/* Install PWA action */}
         <div className="px-4 py-3 border-t border-border">
           <button
@@ -96,7 +102,7 @@ export function NavBar() {
         </div>
 
         <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
-          v0.1.0 — Frontend only
+          v0.2.0 — Multimodal & Multilingual
         </div>
       </nav>
 

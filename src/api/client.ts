@@ -67,6 +67,7 @@ export interface AskQuestionOptions {
   regionId?: string | null;
   growthStageId?: string | null;
   imageFile?: File;
+  language?: string;
 }
 
 export interface PackDownloadPayload {
@@ -90,6 +91,7 @@ export async function askQuestion(
     if (opts.cropId) formData.append('cropId', opts.cropId);
     if (opts.regionId) formData.append('regionId', opts.regionId);
     if (opts.growthStageId) formData.append('growthStageId', opts.growthStageId);
+    if (opts.language) formData.append('language', opts.language);
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       throw new DeviceOfflineError();
@@ -123,6 +125,7 @@ export async function askQuestion(
       cropId: opts.cropId,
       regionId: opts.regionId,
       growthStageId: opts.growthStageId,
+      language: opts.language ?? 'en',
     }),
   });
 }

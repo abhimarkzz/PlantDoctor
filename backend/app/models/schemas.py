@@ -130,6 +130,27 @@ class QuestionRequest(BaseModel):
         return self
 
 
+class MultimodalAssessmentResult(CamelModel):
+    id: str
+    query: str
+    likely_issue: str = Field(serialization_alias="likelyIssue")
+    visible_observations: List[str] = Field(default_factory=list, serialization_alias="visibleObservations")
+    possible_causes: List[str] = Field(default_factory=list, serialization_alias="possibleCauses")
+    differential_checks: List[str] = Field(default_factory=list, serialization_alias="differentialChecks")
+    recommended_next_steps: List[str] = Field(default_factory=list, serialization_alias="recommendedNextSteps")
+    warnings: List[str] = Field(default_factory=list)
+    confidence_level: str = Field(serialization_alias="confidenceLevel")
+    missing_context: List[str] = Field(default_factory=list, serialization_alias="missingContext")
+    overall_status: EvidenceStatus = Field(serialization_alias="overallStatus")
+    status_reason: Optional[str] = Field(default=None, serialization_alias="statusReason")
+    evidence_chunks: List[EvidenceChunkOut] = Field(default_factory=list, serialization_alias="evidenceChunks")
+    caveats: List[str] = Field(default_factory=list)
+    language: str = "en"
+    vision_model_status: str = Field(serialization_alias="visionModelStatus")
+    image_attached: bool = Field(default=False, serialization_alias="imageAttached")
+    generated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), serialization_alias="generatedAt")
+
+
 class AnswerResult(CamelModel):
     id: str
     query: str
@@ -142,6 +163,8 @@ class AnswerResult(CamelModel):
     status_reason: Optional[str] = Field(default=None, serialization_alias="statusReason")
     retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
     vector_search_provenance: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="vectorSearchProvenance")
+    assessment: Optional[MultimodalAssessmentResult] = Field(default=None, serialization_alias="assessment")
+
 
 
 class KnowledgePackOut(CamelModel):

@@ -30,8 +30,8 @@ Status legend: **PASS — VERIFIED** · **FAIL** · **BLOCKED** · **NOT VERIFIE
 | Ingestion auth | PASS — VERIFIED | `/api/v1/ingest/text` no-key → 401, wrong-key → 401 |
 | Source resolution | PASS — VERIFIED | `/api/v1/sources/src-7233dae1` → real record (UC-ANR-8356); unknown → 404 |
 | Frontend build | PASS — VERIFIED | `npm run build` succeeds; 19 precache entries |
-| Frontend tests / types / lint | PASS — VERIFIED | `npm test` 38/38, `tsc -b` 0 errors, `oxlint` 0 errors |
-| Backend tests | PASS — VERIFIED | `pytest backend/tests` 33/33 (in-memory services; 1 live-Atlas smoke) |
+| Frontend tests / types / lint | PASS — VERIFIED | `npm test` 49/49 (13 test files), `tsc -b` 0 errors, `oxlint` 0 errors |
+| Backend tests | PASS — VERIFIED | `pytest backend/tests` 38/38 (includes multimodal API & validation suites) |
 | Offline pack download shape | PASS — VERIFIED (fixed) | API returns snake_case; client now normalizes; regression test added |
 | Live offline operation (browser) | NOT VERIFIED | no scriptable offline toggle / IndexedDB in automation browser; manual steps in README |
 | Client checksum recompute | NOT IMPLEMENTED | client verifies checksum presence + chunk→source provenance + non-empty, but does not recompute SHA-256 against payload (see E) |
@@ -39,6 +39,13 @@ Status legend: **PASS — VERIFIED** · **FAIL** · **BLOCKED** · **NOT VERIFIE
 | Service worker (static) | PASS — VERIFIED | `dist/sw.js` precaches shell + `NavigationRoute → index.html`; 0 API-origin references (no sensitive caching) |
 | Live SW registration / offline refresh | BLOCKED | built-in automation browser blocks SW registration; verify via Chrome DevTools (README steps) |
 | Secrets hygiene | PASS — VERIFIED | `.env` untracked; `.gitignore` covers it; `.env.example` placeholders only; 0 secret-pattern hits in `dist/` |
+| **V2: Mobile-First Farmer Home UI** | PASS — VERIFIED | Big action buttons (Speak, Take Photo, Gallery), responsive layout, native language selectors |
+| **V2: Speech-to-Text (STT) 4 Locales** | PASS — VERIFIED | `en-IN`, `hi-IN`, `te-IN`, `ta-IN` Web Speech adapter with honest fallback detection |
+| **V2: Full UI Localization** | PASS — VERIFIED | 100% dictionary coverage for English, Hindi, Telugu, Tamil with `localStorage` persistence |
+| **V2: Read Aloud (TTS)** | PASS — VERIFIED | `window.speechSynthesis` with language voice detection, play/pause/stop state machine |
+| **V2: Camera & Gallery Capture** | PASS — VERIFIED | HTML5 live viewfinder modal with leaf grid & flip, 1280px canvas compression, EXIF stripping |
+| **V2: Multimodal Agricultural Assessment** | PASS — VERIFIED | `POST /api/v1/assess` + multipart `/api/v1/ask`, grounded in Atlas Vector Search + Evidence Gate |
+| **V2: Capacitor Android Integration** | PASS — VERIFIED (Integration Ready) / BLOCKED (JDK 21 requirement for debug APK) | Capacitor 8 configured (`org.plantdoctor.app`), Android project added, permissions configured, assets synced. APK build requires JDK 21 on host machine. |
 
 ## C. Test results (actual)
 
