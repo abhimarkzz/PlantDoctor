@@ -22,11 +22,12 @@ export function SourceCard({ chunk }: Props) {
         "{chunk.text}"
       </p>
 
-      {chunk.pageOrSection && (
-        <p className="text-xs text-muted-foreground mb-3">
-          📄 {chunk.pageOrSection}
-        </p>
-      )}
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-xs text-muted-foreground">
+        {chunk.pageOrSection && <span>📄 {chunk.pageOrSection}</span>}
+        {source.identifier && (
+          <span className="font-mono rounded bg-muted px-1.5 py-0.5">{source.identifier}</span>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {source.authors.length > 0 && (

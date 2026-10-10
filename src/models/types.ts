@@ -42,9 +42,20 @@ export const EVIDENCE_STATUS_META: Record<
   },
 };
 
+/** A structured question submitted to the Plant Doctor */
+export interface Question {
+  query: string;
+  cropId: string | null;
+  regionId: string | null;
+  growthStageId: string | null;
+  hasImage: boolean;
+}
+
 /** A single source document */
 export interface Source {
   id: string;
+  /** Human-facing source identifier (e.g. catalogue/DOI-style ref) */
+  identifier: string | null;
   title: string;
   authors: string[];
   publishedDate: string | null;
@@ -53,6 +64,9 @@ export interface Source {
   /** ISO timestamp of last verification */
   lastVerified: string | null;
 }
+
+/** Alias used across evidence APIs */
+export type EvidenceSource = Source;
 
 /** A chunk of evidence retrieved from a source */
 export interface EvidenceChunk {
@@ -87,7 +101,12 @@ export interface KnowledgePack {
   cropCategories: string[];
   sizeBytes: number;
   sourceCount: number;
+  /** ISO timestamp the pack contents were last updated at the source. */
   lastUpdated: string;
+  /** ISO timestamp this device last synchronized the pack, or null if never. */
+  lastSynced: string | null;
+  /** ISO timestamp the pack's sources were last verified, or null if unknown. */
+  lastVerified: string | null;
   status: 'available' | 'downloading' | 'downloaded' | 'update_available';
 }
 

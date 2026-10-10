@@ -19,6 +19,7 @@ export const DEMO_ANSWER: AnswerResult = {
       sourceId: 'src-demo-001',
       source: {
         id: 'src-demo-001',
+        identifier: 'DEMO-REF-0001',
         title: 'Illustrative Source — Tomato Nutrient Disorders (Placeholder)',
         authors: ['Example Author A', 'Example Author B'],
         publishedDate: '2023-01-15',
@@ -36,6 +37,7 @@ export const DEMO_ANSWER: AnswerResult = {
       sourceId: 'src-demo-002',
       source: {
         id: 'src-demo-002',
+        identifier: 'DEMO-REF-0002',
         title: 'Illustrative Source — Root Diseases of Solanaceae (Placeholder)',
         authors: ['Example Author C'],
         publishedDate: '2021-06-01',
@@ -53,6 +55,7 @@ export const DEMO_ANSWER: AnswerResult = {
       sourceId: 'src-demo-003',
       source: {
         id: 'src-demo-003',
+        identifier: 'DEMO-REF-0003',
         title: 'Illustrative Source — Overwatering Effects (Placeholder)',
         authors: ['Example Author D'],
         publishedDate: '2022-09-10',
@@ -86,6 +89,8 @@ export const DEMO_PACKS: KnowledgePack[] = [
     sizeBytes: 12_500_000,
     sourceCount: 48,
     lastUpdated: '2024-03-15T00:00:00Z',
+    lastSynced: null,
+    lastVerified: null,
     status: 'available',
   },
   {
@@ -98,6 +103,8 @@ export const DEMO_PACKS: KnowledgePack[] = [
     sizeBytes: 8_200_000,
     sourceCount: 35,
     lastUpdated: '2024-01-20T00:00:00Z',
+    lastSynced: null,
+    lastVerified: null,
     status: 'available',
   },
   {
@@ -110,6 +117,8 @@ export const DEMO_PACKS: KnowledgePack[] = [
     sizeBytes: 6_800_000,
     sourceCount: 22,
     lastUpdated: '2023-11-05T00:00:00Z',
+    lastSynced: null,
+    lastVerified: null,
     status: 'available',
   },
 ];

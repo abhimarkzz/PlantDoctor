@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ToastProvider } from './components/Toast';
 import { Layout } from './app/Layout';
 import { HomePage } from './pages/HomePage';
 import { AskPage } from './pages/AskPage';
@@ -9,8 +10,9 @@ import { AboutPage } from './pages/AboutPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ToastProvider>
+      <BrowserRouter>
+        <Routes>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="ask" element={<AskPage />} />
@@ -28,8 +30,9 @@ function App() {
             }
           />
         </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
 

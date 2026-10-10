@@ -64,15 +64,41 @@ These describe *intended system behavior*. They are not yet implemented or valid
 
 ```
 src/
-  api/           Typed API client (fetch-based, configurable base URL)
+  api/           Typed REST client (fetch-based, configurable base URL) + error types
   app/           Layout shell
-  components/    Reusable UI components (badges, cards, banners, states)
+  components/    Reusable UI (badges, cards, banners, states, Select, Toast, fields)
+  data/          Selection taxonomy (crops, regions, growth stages)
   demo/          Labelled illustrative fixtures (never presented as real data)
-  hooks/         useOnlineStatus, useBackendHealth
-  models/        TypeScript types for Source, EvidenceChunk, KnowledgePack, etc.
+  hooks/         useOnlineStatus, useBackendHealth, useRecentActivity (localStorage)
+  models/        Types: Question, EvidenceSource, EvidenceChunk, EvidenceStatus, KnowledgePack, ApiError
   pages/         Route pages
+  services/      Service adapter boundary (see below)
   test/          Test setup
 ```
+
+### Service adapter boundary
+
+Pages depend only on the `PlantDoctorService` interface (`src/services/types.ts`),
+never on a concrete transport:
+
+- `liveService` — wraps the FastAPI REST client. The active default. Attempts the
+  real backend and surfaces an honest "unavailable" state when it can't connect.
+- `demoService` — an explicitly labelled demonstration adapter. Every result it
+  returns carries `isIllustrative: true`. It never fabricates verified sources,
+  never writes to a database, and never reports a successful download.
+
+To connect the real backend, nothing in the pages changes — `liveService` already
+points at `VITE_API_BASE_URL`.
+
+### Honest state handling
+
+- **Ask**: real submission goes through `liveService`; when the backend is
+  unreachable the UI offers a clearly-labelled illustrative example instead.
+- **Library**: distinguishes *backend unavailable* from an *empty library*.
+  Illustrative packs are shown only behind an explicit "Preview" action.
+- **Downloads**: disabled; no success is ever reported without a real persist.
+- **Recent questions**: backed by real `localStorage` — only questions you
+  actually submitted on this device, never fabricated.
 
 ## PWA
 
