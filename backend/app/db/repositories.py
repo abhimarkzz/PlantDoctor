@@ -55,6 +55,32 @@ class SourceRepository(BaseRepository):
             doc = self._memory_store.get(source_id)
             return SourceRecord.model_validate(doc) if doc else None
 
+    def find_by_identifier(self, identifier: str) -> Optional[SourceRecord]:
+        if not identifier:
+            return None
+        if self.is_connected:
+            col = self.get_collection()
+            doc = col.find_one({"identifier": identifier})
+            return SourceRecord.model_validate(doc) if doc else None
+        else:
+            for doc in self._memory_store.values():
+                if doc.get("identifier") == identifier:
+                    return SourceRecord.model_validate(doc)
+            return None
+
+    def find_by_checksum(self, checksum: str) -> Optional[SourceRecord]:
+        if not checksum:
+            return None
+        if self.is_connected:
+            col = self.get_collection()
+            doc = col.find_one({"checksum": checksum})
+            return SourceRecord.model_validate(doc) if doc else None
+        else:
+            for doc in self._memory_store.values():
+                if doc.get("checksum") == checksum:
+                    return SourceRecord.model_validate(doc)
+            return None
+
     def list_all(self, limit: int = 100) -> List[SourceRecord]:
         if self.is_connected:
             col = self.get_collection()
@@ -109,6 +135,17 @@ class EvidenceChunkRepository(BaseRepository):
                 for d in self._memory_store.values()
                 if d.get("source_id") == source_id
             ]
+
+    def delete_by_source_id(self, source_id: str) -> int:
+        if self.is_connected:
+            col = self.get_collection()
+            res = col.delete_many({"source_id": source_id})
+            return res.deleted_count
+        else:
+            keys_to_del = [k for k, v in self._memory_store.items() if v.get("source_id") == source_id]
+            for k in keys_to_del:
+                del self._memory_store[k]
+            return len(keys_to_del)
 
     def list_all(self, limit: int = 500) -> List[EvidenceChunkRecord]:
         if self.is_connected:

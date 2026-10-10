@@ -30,13 +30,14 @@ export const liveService: PlantDoctorService = {
       if (installed.length === 0) {
         throw new DeviceOfflineError('Device is offline and no knowledge packs are installed.');
       }
-      return searchOffline(question.query, question.cropId, question.regionId);
+      return searchOffline(question.query, question.cropId, question.regionId, question.language);
     }
     return askQuestion(question.query, {
       cropId: question.cropId,
       regionId: question.regionId,
       growthStageId: question.growthStageId,
       imageFile: image,
+      language: question.language,
     });
   },
 

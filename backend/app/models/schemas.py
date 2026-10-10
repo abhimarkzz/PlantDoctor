@@ -101,6 +101,7 @@ class EvidenceChunkOut(CamelModel):
     relevance_score: Optional[float] = Field(default=None, serialization_alias="relevanceScore")
     page_or_section: Optional[str] = Field(default=None, serialization_alias="pageOrSection")
     retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
+    translated_explanation: Optional[str] = Field(default=None, serialization_alias="translatedExplanation")
 
 
 class QuestionRequest(BaseModel):
@@ -118,6 +119,11 @@ class QuestionRequest(BaseModel):
         if isinstance(data, dict):
             if "query" not in data and "question" in data:
                 data["query"] = data["question"]
+            if "language" not in data:
+                if "responseLanguage" in data:
+                    data["language"] = data["responseLanguage"]
+                elif "response_language" in data:
+                    data["language"] = data["response_language"]
         return data
 
     @model_validator(mode="after")
@@ -128,6 +134,27 @@ class QuestionRequest(BaseModel):
             raise ValueError("query must contain at least 3 non-whitespace characters")
         self.query = stripped
         return self
+
+
+class MultimodalAssessmentResult(CamelModel):
+    id: str
+    query: str
+    likely_issue: str = Field(serialization_alias="likelyIssue")
+    visible_observations: List[str] = Field(default_factory=list, serialization_alias="visibleObservations")
+    possible_causes: List[str] = Field(default_factory=list, serialization_alias="possibleCauses")
+    differential_checks: List[str] = Field(default_factory=list, serialization_alias="differentialChecks")
+    recommended_next_steps: List[str] = Field(default_factory=list, serialization_alias="recommendedNextSteps")
+    warnings: List[str] = Field(default_factory=list)
+    confidence_level: str = Field(serialization_alias="confidenceLevel")
+    missing_context: List[str] = Field(default_factory=list, serialization_alias="missingContext")
+    overall_status: EvidenceStatus = Field(serialization_alias="overallStatus")
+    status_reason: Optional[str] = Field(default=None, serialization_alias="statusReason")
+    evidence_chunks: List[EvidenceChunkOut] = Field(default_factory=list, serialization_alias="evidenceChunks")
+    caveats: List[str] = Field(default_factory=list)
+    language: str = "en"
+    vision_model_status: str = Field(serialization_alias="visionModelStatus")
+    image_attached: bool = Field(default=False, serialization_alias="imageAttached")
+    generated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), serialization_alias="generatedAt")
 
 
 class AnswerResult(CamelModel):
@@ -142,6 +169,9 @@ class AnswerResult(CamelModel):
     status_reason: Optional[str] = Field(default=None, serialization_alias="statusReason")
     retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
     vector_search_provenance: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="vectorSearchProvenance")
+    assessment: Optional[MultimodalAssessmentResult] = Field(default=None, serialization_alias="assessment")
+    response_language: Optional[str] = Field(default="en", serialization_alias="responseLanguage")
+
 
 
 class KnowledgePackOut(CamelModel):

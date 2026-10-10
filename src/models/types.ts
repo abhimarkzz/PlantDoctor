@@ -49,6 +49,7 @@ export interface Question {
   regionId: string | null;
   growthStageId: string | null;
   hasImage: boolean;
+  language?: string;
 }
 
 /** A single source document */
@@ -77,6 +78,28 @@ export interface EvidenceChunk {
   status: EvidenceStatus;
   relevanceScore: number | null;
   pageOrSection: string | null;
+  translatedExplanation?: string | null;
+}
+
+export interface MultimodalAssessmentResult {
+  id: string;
+  query: string;
+  likelyIssue: string;
+  visibleObservations: string[];
+  possibleCauses: string[];
+  differentialChecks: string[];
+  recommendedNextSteps: string[];
+  warnings: string[];
+  confidenceLevel: string;
+  missingContext: string[];
+  overallStatus: EvidenceStatus;
+  statusReason?: string | null;
+  evidenceChunks: EvidenceChunk[];
+  caveats: string[];
+  language: string;
+  visionModelStatus: string;
+  imageAttached: boolean;
+  generatedAt: string;
 }
 
 /** The complete answer result from the backend */
@@ -89,6 +112,8 @@ export interface AnswerResult {
   caveats: string[];
   generatedAt: string;
   isIllustrative: boolean;
+  assessment?: MultimodalAssessmentResult;
+  responseLanguage?: string;
 }
 
 /** Knowledge pack for offline use */

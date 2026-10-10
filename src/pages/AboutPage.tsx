@@ -1,205 +1,232 @@
-import { Shield, AlertTriangle, Database, Leaf, BookCheck, Scale, FileWarning } from 'lucide-react';
+import { Shield, AlertTriangle, Database, Leaf, BookCheck, Scale } from 'lucide-react';
 import { EVIDENCE_STATUS_META } from '../models/types';
 import type { EvidenceStatus } from '../models/types';
 import { EvidenceStatusBadge } from '../components/EvidenceStatusBadge';
+import { useTranslation } from '../i18n/LanguageContext';
+import { LanguageSelector } from '../components/LanguageSelector';
 
 export function AboutPage() {
+  const { t } = useTranslation();
+
+  const trustItems = [
+    t.aboutTrustItem1,
+    t.aboutTrustItem2,
+    t.aboutTrustItem3,
+    t.aboutTrustItem4,
+    t.aboutTrustItem5,
+  ];
+
+  const archItems = [
+    t.aboutArchItem1,
+    t.aboutArchItem2,
+    t.aboutArchItem3,
+    t.aboutArchItem4,
+    t.aboutArchItem5,
+  ];
+
+  const limitItems = [
+    t.aboutLimitsItem1,
+    t.aboutLimitsItem2,
+    t.aboutLimitsItem3,
+    t.aboutLimitsItem4,
+    t.aboutLimitsItem5,
+  ];
+
+  const ethicsItems = [
+    t.aboutEthicsItem1,
+    t.aboutEthicsItem2,
+    t.aboutEthicsItem3,
+    t.aboutEthicsItem4,
+    t.aboutEthicsItem5,
+  ];
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
-          About Plant Doctor
-        </h1>
-        <p className="text-muted-foreground leading-relaxed">
-          An offline-first, evidence-grounded agricultural assistant that helps users access
-          traceable agricultural guidance and understand when the available evidence is
-          incomplete, conflicting, outdated, or unsuitable for their situation.
-        </p>
+    <div className="space-y-8 pb-10">
+      {/* Header and Language Selector */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
+            {t.aboutTitle}
+          </h1>
+          <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+            {t.aboutSubtitle}
+          </p>
+        </div>
+        <LanguageSelector />
       </div>
 
       {/* Mission */}
-      <section className="rounded-2xl border border-border bg-card p-6">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
         <div className="flex items-center gap-2 mb-3">
           <Leaf size={20} className="text-primary" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-card-foreground">Mission</h2>
+          <h2 className="font-heading text-lg font-semibold text-card-foreground">
+            {t.aboutMissionTitle}
+          </h2>
         </div>
         <p className="text-sm text-card-foreground/90 leading-relaxed">
-          Plant Doctor aims to provide smallholder farmers and agricultural advisors with
-          credible, source-traceable crop health guidance — even in low-connectivity environments.
-          Every recommendation is grounded in identifiable evidence, and every limitation
-          is made visible rather than hidden.
+          {t.aboutMissionDesc}
         </p>
       </section>
 
       {/* Evidence Status Gate */}
-      <section>
-        <div className="flex items-center gap-2 mb-3">
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 mb-1">
           <Shield size={20} className="text-primary" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-foreground">Evidence Status Gate</h2>
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            {t.aboutGateTitle}
+          </h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-          The Evidence Status Gate is a planned feature that labels every piece of guidance with
-          one of five evidence statuses. These describe <strong>intended system behavior</strong> —
-          they are not yet scientifically validated until the corresponding backend exists and passes tests.
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {t.aboutGateDesc}
         </p>
-        <div className="space-y-3">
-          {(Object.entries(EVIDENCE_STATUS_META) as [EvidenceStatus, typeof EVIDENCE_STATUS_META[EvidenceStatus]][]).map(
-            ([key, meta]) => (
-              <div key={key} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 rounded-xl border border-border bg-card p-4">
-                <EvidenceStatusBadge status={key} className="shrink-0" />
-                <p className="text-sm text-card-foreground/80 leading-relaxed">{meta.description}</p>
-              </div>
-            ),
-          )}
+        <div className="space-y-3 pt-1">
+          {(Object.keys(EVIDENCE_STATUS_META) as EvidenceStatus[]).map((key) => (
+            <div
+              key={key}
+              className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30"
+            >
+              <EvidenceStatusBadge status={key} className="shrink-0" />
+              <p className="text-xs sm:text-sm text-card-foreground/80 leading-relaxed">
+                {key === 'applicable'
+                  ? t.statusApplicableDesc
+                  : key === 'context_incomplete'
+                    ? t.statusContextIncompleteDesc
+                    : key === 'conflicting_evidence'
+                      ? t.statusConflictingDesc
+                      : key === 'freshness_unverified'
+                        ? t.statusFreshnessUnverifiedDesc
+                        : t.statusInsufficientDesc}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Source trust */}
-      <section className="rounded-2xl border border-border bg-card p-6">
+      {/* Source trust & provenance */}
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
         <div className="flex items-center gap-2 mb-3">
           <BookCheck size={20} className="text-primary" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-card-foreground">Source trust & provenance</h2>
+          <h2 className="font-heading text-lg font-semibold text-card-foreground">
+            {t.aboutTrustTitle}
+          </h2>
         </div>
         <p className="text-sm text-card-foreground/90 leading-relaxed mb-3">
-          When the backend is connected, every piece of evidence will show:
+          {t.aboutTrustDesc}
         </p>
         <ul className="text-sm text-card-foreground/80 space-y-2">
-          {[
-            'The original source title, authors, and publishing institution.',
-            'The publication date and the date the source was last verified.',
-            'The specific page, section, or chunk the evidence was extracted from.',
-            'A relevance score indicating how closely it matches the query context.',
-            'An evidence status reflecting the quality and applicability assessment.',
-          ].map((item, i) => (
+          {trustItems.map((item, i) => (
             <li key={i} className="flex gap-2">
               <span className="text-primary font-bold shrink-0">✓</span>
-              {item}
+              <span>{item}</span>
             </li>
           ))}
         </ul>
       </section>
 
       {/* Architecture */}
-      <section className="rounded-2xl border border-border bg-card p-6">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
         <div className="flex items-center gap-2 mb-3">
           <Database size={20} className="text-primary" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-card-foreground">Planned architecture</h2>
+          <h2 className="font-heading text-lg font-semibold text-card-foreground">
+            {t.aboutArchTitle}
+          </h2>
         </div>
         <p className="text-sm text-card-foreground/90 leading-relaxed mb-3">
-          The full system will use:
+          {t.aboutArchDesc}
         </p>
         <ul className="text-sm text-card-foreground/80 space-y-2">
-          {[
-            'FastAPI for the REST API layer.',
-            'MongoDB Atlas for agricultural sources, evidence chunks, embeddings, source versions, and applicability metadata.',
-            'Versioned offline knowledge packs with manifests and checksums.',
-            'Retrieval-augmented generation with source attribution.',
-            'An IndexedDB-based local evidence store for offline queries.',
-          ].map((item, i) => (
+          {archItems.map((item, i) => (
             <li key={i} className="flex gap-2">
               <span className="text-secondary font-bold shrink-0">→</span>
-              {item}
+              <span>{item}</span>
             </li>
           ))}
         </ul>
-        <p className="text-xs text-muted-foreground mt-3 italic">
-          None of these backend components are connected in the current frontend milestone.
-        </p>
       </section>
 
-      {/* Limitations */}
-      <section className="rounded-2xl bg-amber-50 border border-amber-200 p-6">
+      {/* Operational Boundaries & Safety Warnings (High Contrast) */}
+      <section className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-6">
         <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle size={20} className="text-amber-600" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-foreground">Current limitations</h2>
+          <AlertTriangle size={20} className="text-amber-800 dark:text-amber-400" aria-hidden="true" />
+          <h2 className="font-heading text-lg font-semibold text-amber-950 dark:text-amber-100">
+            {t.aboutLimitsTitle}
+          </h2>
         </div>
-        <ul className="text-sm text-foreground/80 space-y-2">
-          {[
-            'No backend, database, or model is connected.',
-            'All example data is clearly labelled as illustrative.',
-            'Image upload does not perform diagnosis — no inference model is running.',
-            'Offline knowledge packs are not downloadable or locally searchable.',
-            'Evidence status labels describe intended behavior, not validated functionality.',
-            'The service worker caches the application shell only — it does not enable offline question answering.',
-          ].map((item, i) => (
-            <li key={i} className="flex gap-2">
-              <FileWarning size={14} className="text-amber-600 mt-0.5 shrink-0" aria-hidden="true" />
-              {item}
+        <ul className="text-sm text-amber-900 dark:text-amber-200 space-y-2.5">
+          {limitItems.map((item, i) => (
+            <li key={i} className="flex gap-2.5">
+              <span className="text-amber-800 dark:text-amber-400 font-bold shrink-0">•</span>
+              <span>{item}</span>
             </li>
           ))}
         </ul>
       </section>
 
       {/* PWA Installation & Offline Shell */}
-      <section className="rounded-2xl border border-border bg-card p-6 space-y-4" data-testid="pwa-install-guide">
+      <section className="rounded-2xl border border-border bg-card p-6 space-y-4 shadow-xs" data-testid="pwa-install-guide">
         <div className="flex items-center gap-2 mb-1">
           <Leaf size={20} className="text-primary" aria-hidden="true" />
           <h2 className="font-heading text-lg font-semibold text-card-foreground">
-            Progressive Web App (PWA) & Offline Shell
+            {t.aboutPwaTitle}
           </h2>
         </div>
         <p className="text-sm text-card-foreground/90 leading-relaxed">
-          Plant Doctor is built as a Progressive Web App (PWA). Once loaded in a modern browser, the service worker caches the application shell (HTML, JavaScript, CSS, icons, fonts) so you can reopen and use the app interface offline.
+          {t.aboutPwaDesc}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {/* Android installation */}
+          {/* Android */}
           <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2.5">
-            <h3 className="font-heading font-semibold text-sm text-foreground flex items-center gap-1.5">
-              <span>Android (Google Chrome / Edge)</span>
+            <h3 className="font-heading font-semibold text-sm text-foreground">
+              {t.aboutPwaAndroidTitle}
             </h3>
             <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside leading-relaxed">
-              <li>Open the app in Chrome or Edge on your Android phone.</li>
-              <li>Tap the three-dot menu icon (⋮) in the top-right corner.</li>
-              <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
-              <li>Confirm the prompt. Plant Doctor will install as a standalone app on your home screen.</li>
+              <li>{t.aboutPwaAndroidStep1}</li>
+              <li>{t.aboutPwaAndroidStep2}</li>
+              <li>{t.aboutPwaAndroidStep3}</li>
+              <li>{t.aboutPwaAndroidStep4}</li>
             </ol>
           </div>
 
-          {/* iOS installation */}
+          {/* iOS */}
           <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2.5">
-            <h3 className="font-heading font-semibold text-sm text-foreground flex items-center gap-1.5">
-              <span>iPhone / iPad (Apple Safari)</span>
+            <h3 className="font-heading font-semibold text-sm text-foreground">
+              {t.aboutPwaIosTitle}
             </h3>
             <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside leading-relaxed">
-              <li>Open the app in Safari (iOS requires Safari for home screen installation).</li>
-              <li>Tap the <strong>Share</strong> button (box with upward arrow) in the bottom toolbar.</li>
-              <li>Scroll down and tap <strong>"Add to Home Screen"</strong> (➕).</li>
-              <li>Tap <strong>Add</strong> in the top-right corner to save to your home screen.</li>
+              <li>{t.aboutPwaIosStep1}</li>
+              <li>{t.aboutPwaIosStep2}</li>
+              <li>{t.aboutPwaIosStep3}</li>
+              <li>{t.aboutPwaIosStep4}</li>
             </ol>
           </div>
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed pt-2 border-t border-border">
-          <strong>Important distinction:</strong> Installing the PWA and caching the app shell allows the interface, navigation, forms, and cached reference materials to open offline. It does <em>not</em> enable offline AI queries or live retrieval until local pack storage (IndexedDB) and offline search are implemented.
+          {t.aboutPwaNote}
         </p>
       </section>
 
       {/* Ethics */}
-      <section className="rounded-2xl border border-border bg-card p-6">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
         <div className="flex items-center gap-2 mb-3">
           <Scale size={20} className="text-primary" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-card-foreground">Ethical commitments</h2>
+          <h2 className="font-heading text-lg font-semibold text-card-foreground">
+            {t.aboutEthicsTitle}
+          </h2>
         </div>
         <ul className="text-sm text-card-foreground/80 space-y-2">
-          {[
-            'Never fabricate agricultural guidance or invent source citations.',
-            'Always show when evidence is insufficient, conflicting, or outdated.',
-            'Never present a photo upload as a confirmed diagnosis.',
-            'Clearly distinguish illustrative examples from real evidence.',
-            'Make offline limitations visible rather than hiding them.',
-          ].map((item, i) => (
+          {ethicsItems.map((item, i) => (
             <li key={i} className="flex gap-2">
               <span className="text-primary font-bold shrink-0">•</span>
-              {item}
+              <span>{item}</span>
             </li>
           ))}
         </ul>
       </section>
 
       <p className="text-xs text-muted-foreground text-center py-4">
-        Plant Doctor v0.1.0 — Frontend milestone
+        {t.aboutVersionBadge}
       </p>
     </div>
   );

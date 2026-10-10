@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-heading: "Lora", Georgia, serif;
-  --font-body: "Raleway", system-ui, sans-serif;
+  --font-heading: "Lora", "Noto Serif Devanagari", "Noto Serif Telugu", "Noto Serif Tamil", Georgia, serif;
+  --font-body: "Raleway", "Noto Sans Devanagari", "Noto Sans Telugu", "Noto Sans Tamil", system-ui, -apple-system, sans-serif;
 
   --color-primary: #15803D;
   --color-primary-light: #22c55e;
@@ -22,16 +22,16 @@
   --color-destructive: #DC2626;
   --color-on-destructive: #FFFFFF;
   --color-ring: #15803D;
-  --color-warning: #f59e0b;
+  --color-warning: #92400e;
   --color-warning-bg: #fef3c7;
-  --color-info: #3b82f6;
+  --color-info: #1d4ed8;
   --color-info-bg: #dbeafe;
 
   --color-evidence-applicable: #15803D;
-  --color-evidence-incomplete: #D97706;
+  --color-evidence-incomplete: #B45309;
   --color-evidence-conflicting: #DC2626;
-  --color-evidence-unverified: #6366f1;
-  --color-evidence-insufficient: #6b7280;
+  --color-evidence-unverified: #4f46e5;
+  --color-evidence-insufficient: #475569;
 }
 
 /* Dark mode tokens */
@@ -44,7 +44,8 @@
     --color-muted: #1a2e1a;
     --color-muted-foreground: #94a3b8;
     --color-border: #2d4a2d;
-    --color-warning-bg: #451a03;
+    --color-warning: #fbbf24;
+    --color-warning-bg: #2d1804;
     --color-info-bg: #1e3a5f;
   }
 }
@@ -56,7 +57,8 @@
   --color-muted: #1a2e1a;
   --color-muted-foreground: #94a3b8;
   --color-border: #2d4a2d;
-  --color-warning-bg: #451a03;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #2d1804;
   --color-info-bg: #1e3a5f;
 }
 

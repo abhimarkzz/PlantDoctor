@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { useTranslation } from '../i18n/LanguageContext';
 
 interface Option {
   id: string;
@@ -27,13 +28,14 @@ export function Select({
   hint,
 }: Props) {
   const id = useId();
+  const { t } = useTranslation();
 
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-foreground mb-1.5">
         {label}
         {required && <span className="text-destructive ml-0.5" aria-hidden="true">*</span>}
-        {optional && <span className="text-muted-foreground font-normal ml-1.5">(optional)</span>}
+        {optional && <span className="text-muted-foreground font-normal ml-1.5">{t.optionalBadge}</span>}
       </label>
       <select
         id={id}

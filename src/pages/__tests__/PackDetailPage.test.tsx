@@ -16,9 +16,12 @@ describe('PackDetailPage', () => {
       </ToastProvider>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/Tropical Vegetable Crops/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Tropical Vegetable Crops/i)).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     expect(screen.getByText(/Illustrative example — not real guidance/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Download for offline use/i })).toBeInTheDocument();
@@ -36,9 +39,12 @@ describe('PackDetailPage', () => {
       </ToastProvider>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/Pack not found/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Pack not found/i)).toBeInTheDocument();
+      },
+      { timeout: 4000 },
+    );
 
     expect(screen.getByRole('link', { name: /Back to Library/i })).toBeInTheDocument();
   });

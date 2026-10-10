@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Select } from './Select';
-import { CROPS, REGIONS, GROWTH_STAGES } from '../data/catalog';
+import { getCrops, getRegions, getGrowthStages } from '../data/catalog';
+import { useTranslation } from '../i18n/LanguageContext';
 
 export interface CropContext {
   cropId: string | null;
@@ -15,34 +17,40 @@ interface Props {
 }
 
 export function CropContextFields({ value, onChange, requireCropRegion = false, layout = 'grid' }: Props) {
+  const { language, t } = useTranslation();
+
+  const crops = useMemo(() => getCrops(language), [language]);
+  const regions = useMemo(() => getRegions(language), [language]);
+  const growthStages = useMemo(() => getGrowthStages(language), [language]);
+
   const wrapperClass =
     layout === 'grid' ? 'grid grid-cols-1 sm:grid-cols-3 gap-4' : 'space-y-4';
 
   return (
     <div className={wrapperClass}>
       <Select
-        label="Crop"
+        label={t.cropLabel}
         value={value.cropId}
         onChange={(cropId) => onChange({ ...value, cropId })}
-        options={CROPS}
+        options={crops}
         required={requireCropRegion}
-        placeholder="Select a crop"
+        placeholder={t.selectCropOptional}
       />
       <Select
-        label="Region / Climate"
+        label={t.regionLabel}
         value={value.regionId}
         onChange={(regionId) => onChange({ ...value, regionId })}
-        options={REGIONS}
+        options={regions}
         required={requireCropRegion}
-        placeholder="Select a region"
+        placeholder={t.selectRegionOptional}
       />
       <Select
-        label="Growth stage"
+        label={t.growthStageLabel}
         value={value.growthStageId}
         onChange={(growthStageId) => onChange({ ...value, growthStageId })}
-        options={GROWTH_STAGES}
+        options={growthStages}
         optional
-        placeholder="Select stage"
+        placeholder={t.selectStageOptional}
       />
     </div>
   );
