@@ -94,6 +94,7 @@ class AnswerService:
                     status=gate_eval.status,
                     relevance_score=chunk.relevance_score,
                     page_or_section=chunk.page_or_section,
+                    retrieval_mode=chunk.retrieval_mode,
                 )
             )
 
@@ -111,6 +112,16 @@ class AnswerService:
         # (Guard against fabricated citations)
         summary = self._enforce_citation_integrity(summary, valid_chunk_ids)
 
+        # Determine overall retrieval provenance
+        if any(c.retrieval_mode == "atlas_vector_search" for c in chunks_out):
+            overall_retrieval_mode = "atlas_vector_search"
+        elif any(c.retrieval_mode == "local_cosine_test_double" for c in chunks_out):
+            overall_retrieval_mode = "local_cosine_test_double"
+        elif chunks_out:
+            overall_retrieval_mode = chunks_out[0].retrieval_mode or "hybrid_retrieval"
+        else:
+            overall_retrieval_mode = "no_evidence_retrieved"
+
         return AnswerResult(
             id=f"ans-{uuid.uuid4().hex[:10]}",
             query=query,
@@ -121,6 +132,12 @@ class AnswerService:
             is_illustrative=False,
             generated_at=datetime.now(timezone.utc).isoformat(),
             status_reason=gate_eval.reason,
+            retrieval_mode=overall_retrieval_mode,
+            vector_search_provenance={
+                "retrievalMode": overall_retrieval_mode,
+                "verifiedSourcesCount": len(valid_chunk_ids),
+                "chunksReturned": len(chunks_out),
+            },
         )
 
     def _synthesize_grounded_answer(

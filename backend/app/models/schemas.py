@@ -45,6 +45,7 @@ class EvidenceChunkRecord(BaseModel):
     embedding: Optional[List[float]] = None
     status: SourceStatus = SourceStatus.VERIFIED
     relevance_score: Optional[float] = None
+    retrieval_mode: Optional[str] = Field(default=None, description="Provenance: 'atlas_vector_search' or 'local_cosine_test_double'")
     pack_ids: List[str] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -99,6 +100,7 @@ class EvidenceChunkOut(CamelModel):
     status: EvidenceStatus
     relevance_score: Optional[float] = Field(default=None, serialization_alias="relevanceScore")
     page_or_section: Optional[str] = Field(default=None, serialization_alias="pageOrSection")
+    retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
 
 
 class QuestionRequest(BaseModel):
@@ -129,6 +131,8 @@ class AnswerResult(CamelModel):
     is_illustrative: bool = Field(default=False, serialization_alias="isIllustrative")
     generated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), serialization_alias="generatedAt")
     status_reason: Optional[str] = Field(default=None, serialization_alias="statusReason")
+    retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
+    vector_search_provenance: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="vectorSearchProvenance")
 
 
 class KnowledgePackOut(CamelModel):
@@ -157,6 +161,7 @@ class HealthResponse(CamelModel):
     llm_status: str = Field(description="'available' or 'not_configured'", serialization_alias="llmStatus")
     version: str = "0.1.0"
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    vector_search: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="vectorSearch")
 
 
 class IngestDocumentRequest(BaseModel):
