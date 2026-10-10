@@ -112,7 +112,7 @@ Latencies reflect live Atlas round-trips (not local cosine). Re-run the command 
 Plant Doctor is installable as a PWA. **This phase provides offline access to the
 application shell only** — the UI reopens without a network connection once the
 browser has cached it. It does **not** mean agricultural questions can be answered
-offline: live question answering, library sync, and pack downloads all require a
+offline: live question answering, library sync and pack downloads all require a
 network connection and a running backend.
 
 ### Install on Android (Chrome / Edge)
@@ -120,7 +120,7 @@ network connection and a running backend.
 2. Tap the **⋮** menu → **Install app** (or **Add to Home screen**).
 3. Confirm. The app launches standalone from your home screen.
    - The in-app **Install App (PWA)** button triggers the same native prompt when the browser offers it.
-
+ 
 ### Install on iPhone / iPad (Safari)
 1. Open the deployed site in **Safari** (iOS only installs PWAs from Safari).
 2. Tap the **Share** icon → **Add to Home Screen**.
