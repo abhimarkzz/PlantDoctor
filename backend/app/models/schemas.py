@@ -118,6 +118,11 @@ class QuestionRequest(BaseModel):
         if isinstance(data, dict):
             if "query" not in data and "question" in data:
                 data["query"] = data["question"]
+            if "language" not in data:
+                if "responseLanguage" in data:
+                    data["language"] = data["responseLanguage"]
+                elif "response_language" in data:
+                    data["language"] = data["response_language"]
         return data
 
     @model_validator(mode="after")
@@ -164,6 +169,7 @@ class AnswerResult(CamelModel):
     retrieval_mode: Optional[str] = Field(default=None, serialization_alias="retrievalMode")
     vector_search_provenance: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="vectorSearchProvenance")
     assessment: Optional[MultimodalAssessmentResult] = Field(default=None, serialization_alias="assessment")
+    response_language: Optional[str] = Field(default="en", serialization_alias="responseLanguage")
 
 
 

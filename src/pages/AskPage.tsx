@@ -153,12 +153,12 @@ export function AskPage() {
   function validate(): boolean {
     const trimmed = query.trim();
     if (trimmed.length === 0 && !image) {
-      setValidationError('Please enter a question before submitting.');
+      setValidationError(t.errorEmptyQuestion);
       textareaRef.current?.focus();
       return false;
     }
     if (trimmed.length < 10 && !image) {
-      setValidationError('Your question is too short — please add more detail (at least 10 characters).');
+      setValidationError(t.errorShortQuestion);
       textareaRef.current?.focus();
       return false;
     }
@@ -190,9 +190,9 @@ export function AskPage() {
         return;
       }
       if (err instanceof BackendUnavailableError) {
-        setErrorMsg('The backend is not connected, so no real evidence can be retrieved. You can view a clearly-labelled illustrative example instead.');
+        setErrorMsg(t.backendUnavailableBanner);
       } else {
-        setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred.');
+        setErrorMsg(err instanceof Error ? err.message : t.errorGeneric);
       }
       setState('error');
     }
@@ -217,9 +217,9 @@ export function AskPage() {
         regionId: question.regionId,
         illustrative: true,
       });
-      notify('Showing an illustrative example — not real guidance.', 'info');
+      notify(t.illustrativeBannerTitle, 'info');
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Could not load illustrative example.');
+      setErrorMsg(err instanceof Error ? err.message : t.errorGeneric);
       setState('error');
     }
   }
@@ -230,7 +230,7 @@ export function AskPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-1">
-            Ask Plant Doctor
+            {t.askDoctor}
           </h1>
           <p className="text-muted-foreground text-xs md:text-sm">
             {t.tagline}
@@ -246,9 +246,9 @@ export function AskPage() {
         >
           <WifiOff size={18} className="text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="space-y-0.5">
-            <p className="font-semibold">Device is offline — Application shell cached</p>
+            <p className="font-semibold">{t.askOfflineBannerTitle}</p>
             <p className="text-amber-800/90 leading-relaxed">
-              You can draft questions and test the context form while offline. Live question submission requires an active network connection. You can also view offline illustrative examples.
+              {t.askOfflineBannerDesc}
             </p>
           </div>
         </div>
@@ -284,7 +284,7 @@ export function AskPage() {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="question" className="block text-sm font-medium text-foreground">
-                Your question
+                {t.yourQuestionLabel}
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </label>
 
@@ -312,7 +312,7 @@ export function AskPage() {
                 setQuery(e.target.value);
                 if (validationError) setValidationError(null);
               }}
-              placeholder="e.g. My tomato plants have yellowing lower leaves and the stems show brown streaks…"
+              placeholder={t.questionPlaceholder}
               rows={4}
               required
               minLength={10}
@@ -330,7 +330,7 @@ export function AskPage() {
               </p>
             )}
             <p id="question-hint" className="mt-1 text-xs text-muted-foreground">
-              {query.length}/2000 characters · Minimum 10 characters
+              {query.length}/2000 · {t.questionHint}
             </p>
           </div>
 
@@ -385,21 +385,21 @@ export function AskPage() {
                 {imagePreview && (
                   <img
                     src={imagePreview}
-                    alt="Attached plant photo preview"
+                    alt={t.imagePreviewAlt}
                     className="h-16 w-16 rounded-xl object-cover border border-border shadow-xs"
                   />
                 )}
                 <div className="text-sm min-w-0">
                   <p className="text-foreground font-semibold truncate">{image.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Photo attached for multimodal leaf analysis ({Math.round(image.size / 1024)} KB)
+                    {t.photoAttachedDetail} ({Math.round(image.size / 1024)} KB)
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={removeImage}
                   className="ml-auto p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer"
-                  aria-label="Remove attached image"
+                  aria-label={t.removePhoto}
                 >
                   <X size={18} />
                 </button>
@@ -418,7 +418,7 @@ export function AskPage() {
               ) : (
                 <Send size={18} aria-hidden="true" />
               )}
-              {state === 'loading' ? 'Searching…' : 'Ask'}
+              {state === 'loading' ? t.searching : t.askBtn}
             </button>
             <button
               type="button"
@@ -427,7 +427,7 @@ export function AskPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 cursor-pointer"
             >
               <Eye size={16} aria-hidden="true" />
-              View illustrative example
+              {t.viewIllustrativeExample}
             </button>
           </div>
         </form>
@@ -443,8 +443,8 @@ export function AskPage() {
       {state === 'offline' && (
         <div className="space-y-4" data-testid="ask-offline-screen">
           <OfflineServiceScreen
-            title="Question submission unavailable offline"
-            message="You are currently offline. Querying live agricultural evidence requires an active network connection to reach the backend services. Your question draft has been preserved so you can submit as soon as connectivity is restored."
+            title={t.askOfflineScreenTitle}
+            message={t.askOfflineScreenMessage}
             onRetry={() => {
               if (navigator.onLine) {
                 void runSubmit();
@@ -460,7 +460,7 @@ export function AskPage() {
                   className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <Eye size={16} aria-hidden="true" />
-                  View illustrative example
+                  {t.viewIllustrativeExample}
                 </button>
                 <button
                   type="button"
@@ -468,7 +468,7 @@ export function AskPage() {
                   className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={16} aria-hidden="true" />
-                  Edit question
+                  {t.editQuestion}
                 </button>
               </div>
             }
@@ -486,7 +486,7 @@ export function AskPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             >
               <Eye size={16} aria-hidden="true" />
-              View illustrative example
+              {t.viewIllustrativeExample}
             </button>
           </div>
         </div>
@@ -509,7 +509,7 @@ export function AskPage() {
             to={`/evidence/${result.id}`}
             className="inline-flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer"
           >
-            View full evidence details →
+            {t.viewFullEvidenceDetails}
           </Link>
         </div>
       )}

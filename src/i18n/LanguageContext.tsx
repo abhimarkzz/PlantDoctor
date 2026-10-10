@@ -16,8 +16,15 @@ const STORAGE_KEY = 'plant_doctor_language';
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: {
+  children: ReactNode;
+  initialLanguage?: SupportedLanguage;
+}) {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
+    if (initialLanguage) return initialLanguage;
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
       if (saved && (saved === 'en' || saved === 'hi' || saved === 'te' || saved === 'ta')) {

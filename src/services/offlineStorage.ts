@@ -274,7 +274,8 @@ export async function removeInstalledPack(packId: string): Promise<void> {
 export async function searchOffline(
   query: string,
   cropId?: string | null,
-  regionId?: string | null
+  regionId?: string | null,
+  language: string = 'en'
 ): Promise<AnswerResult> {
   // Deterministic checks
   const queryLower = query.toLowerCase();
@@ -285,14 +286,26 @@ export async function searchOffline(
 
   // Hard crop mismatch check
   if (cropClean && queryCrops.length > 0 && !queryCrops.includes(cropClean)) {
+    const mismatchSummaries: Record<string, string> = {
+      en: `Hard crop mismatch: Active context is set to '${cropClean}', but the query asks about '${queryCrops[0]}'. Agronomic advice for ${queryCrops[0]} cannot be safely applied to ${cropClean}.`,
+      hi: `फसल बेमेल: सक्रिय संदर्भ '${cropClean}' पर सेट है, लेकिन सवाल '${queryCrops[0]}' के बारे में है। ${queryCrops[0]} की सलाह ${cropClean} पर सुरक्षित रूप से लागू नहीं की जा सकती।`,
+      te: `పంట అసమతుల్యత: సందర్భం '${cropClean}'కి సెట్ చేయబడింది, కానీ ప్రశ్న '${queryCrops[0]}' గురించి అడుగుతోంది. ${queryCrops[0]} సలహాను ${cropClean}కి వర్తింపజేయలేము.`,
+      ta: `பயிர் பொருந்தாமை: சூழல் '${cropClean}' என உள்ளது, ஆனால் கேள்வி '${queryCrops[0]}' பற்றியது. ${queryCrops[0]} ஆலோசனை ${cropClean} க்கு பொருந்தாது.`,
+    };
     return {
       id: `ans-offline-${Date.now()}`,
       query,
-      summary: `Hard crop mismatch: Active context is set to '${cropClean}', but the query asks about '${queryCrops[0]}'. Agronomic advice for ${queryCrops[0]} cannot be safely applied to ${cropClean}.`,
+      summary: mismatchSummaries[language] || mismatchSummaries.en,
       overallStatus: 'insufficient_evidence',
       evidenceChunks: [],
       caveats: [
+        language === 'hi' ? 'डिवाइस ऑफ़लाइन मोड में काम कर रहा है।' :
+        language === 'te' ? 'పరికరం ఆఫ్‌లైన్ మోడ్‌లో పనిచేస్తోంది.' :
+        language === 'ta' ? 'சாதனம் ஆஃப்லைன் முறையில் இயங்குகிறது.' :
         'Device is operating in offline mode.',
+        language === 'hi' ? 'कृपया अपने प्रश्न के अनुसार फसल संदर्भ बदलें।' :
+        language === 'te' ? 'దయచేసి మీ ప్రశ్నలోని పంటకు సరిపోయేలా సందర్భాన్ని మార్చండి.' :
+        language === 'ta' ? 'உங்கள் கேள்வியில் உள்ள பயிருக்கு ஏற்ப சூழலை மாற்றவும்.' :
         'Change crop context to match the crop in your question.',
       ],
       generatedAt: new Date().toISOString(),
@@ -302,15 +315,24 @@ export async function searchOffline(
 
   const packs = await listInstalledPacks();
   if (packs.length === 0) {
+    const emptySummaries: Record<string, string> = {
+      en: 'No knowledge packs are currently installed on this device.\n\nOffline question answering requires at least one downloaded knowledge pack. Reconnect to the internet and visit the Offline Library to install a pack.',
+      hi: 'इस डिवाइस पर वर्तमान में कोई ज्ञान पैक इंस्टॉल नहीं है।\n\nऑफ़लाइन प्रश्न उत्तर के लिए कम से कम एक डाउनलोड किए गए ज्ञान पैक की आवश्यकता है। इंटरनेट से कनेक्ट करें और पैक डाउनलोड करने के लिए ऑफ़लाइन लाइब्रेरी पर जाएं।',
+      te: 'ఈ పరికరంలో ప్రస్తుతం ఎలాంటి నాలెడ్జ్ ప్యాక్‌లు ఇన్‌స్టాల్ చేయబడలేదు.\n\nఆఫ్‌లైన్ సమాధానాల కోసం కనీసం ఒక డౌన్‌లోడ్ చేసిన విజ్ఞాన ప్యాక్ అవసరం. ప్యాక్‌ను ఇన్‌స్టాల్ చేయడానికి ఇంటర్నెట్‌కి కనెక్ట్ అవ్వండి.',
+      ta: 'இந்த சாதனத்தில் தற்போது அறிவுப் பொதிகள் எதுவும் நிறுவப்படவில்லை.\n\nஆஃப்லைனில் விடையளிக்க குறைந்தது ஒரு பதிவிறக்கம் செய்யப்பட்ட அறிவுப் பொதி தேவை. இணையத்துடன் இணைத்து ஆஃப்லைன் நூலகத்திற்குச் செல்லவும்.',
+    };
     return {
       id: `ans-offline-${Date.now()}`,
       query,
-      summary:
-        'No knowledge packs are currently installed on this device.\n\n' +
-        'Offline question answering requires at least one downloaded knowledge pack. Reconnect to the internet and visit the Offline Library to install a pack.',
+      summary: emptySummaries[language] || emptySummaries.en,
       overallStatus: 'insufficient_evidence',
       evidenceChunks: [],
-      caveats: ['Device is offline and no local knowledge pack is available.'],
+      caveats: [
+        language === 'hi' ? 'डिवाइस ऑफ़लाइन है और कोई स्थानीय ज्ञान पैक उपलब्ध नहीं है।' :
+        language === 'te' ? 'పరికరం ఆఫ్‌లైన్‌లో ఉంది మరియు స్థానిక నాలెడ్జ్ ప్యాక్ అందుబాటులో లేదు.' :
+        language === 'ta' ? 'சாதனம் ஆஃப்லைனில் உள்ளது மற்றும் உள்ளூர் அறிவுப் பொதி கிடைக்கவில்லை.' :
+        'Device is offline and no local knowledge pack is available.'
+      ],
       generatedAt: new Date().toISOString(),
       isIllustrative: false,
     };
@@ -412,16 +434,26 @@ export async function searchOffline(
   const eligible = scored.slice(0, 4).map((s) => s.chunk);
 
   if (eligible.length === 0) {
+    const insufficientSummaries: Record<string, string> = {
+      en: 'No matching passages found in installed offline knowledge packs.\n\nPlant Doctor abstains from generating unverified advice while disconnected. Consider synchronizing additional regional knowledge packs when back online.',
+      hi: 'स्थापित ऑफ़लाइन ज्ञान पैक में कोई प्रासंगिक अंश नहीं मिला।\n\nप्लांट डॉक्टर ऑफ़लाइन रहते हुए असत्यापित सलाह देने से बचता है। ऑनलाइन होने पर अतिरिक्त क्षेत्रीय ज्ञान पैक डाउनलोड करें।',
+      te: 'ఇన్‌స్టాల్ చేసిన ఆఫ్‌లైన్ విజ్ఞాన ప్యాక్‌లలో సరిపోలే అంశాలు కనుగొనబడలేదు.\n\nఆఫ్‌లైన్‌లో ఉన్నప్పుడు ధృవీకరించని సలహాలను రూపొందించడాన్ని ప్లాంట్ డాక్టర్ నిరోధిస్తుంది. ఆన్‌లైన్‌కి వచ్చినప్పుడు మరిన్ని ప్యాక్‌లను సింక్ చేయండి.',
+      ta: 'நிறுவப்பட்ட ஆஃப்லைன் அறிவுப் பொதிகளில் பொருந்தக்கூடிய பத்திகள் எதுவும் கிடைக்கவில்லை.\n\nஇணைப்பு இல்லாத போது சரிபார்க்கப்படாத ஆலோசனைகளை வழங்குவதை பிளான்ட் டாக்டர் தவிர்க்கிறது. ஆன்லைனில் வரும்போது கூடுதல் பிராந்திய பொதிகளைப் பதிவிறக்கவும்.',
+    };
     return {
       id: `ans-offline-${Date.now()}`,
       query,
-      summary:
-        'No matching passages found in installed offline knowledge packs.\n\n' +
-        'Plant Doctor abstains from generating unverified advice while disconnected. Consider synchronizing additional regional knowledge packs when back online.',
+      summary: insufficientSummaries[language] || insufficientSummaries.en,
       overallStatus: 'insufficient_evidence',
       evidenceChunks: [],
       caveats: [
+        language === 'hi' ? 'डिवाइस स्थानीय IndexedDB ज्ञान पैक का उपयोग करके ऑफ़लाइन काम कर रहा है।' :
+        language === 'te' ? 'పరికరం స్థానిక IndexedDB నాలెడ్జ్ ప్యాక్‌లను ఉపయోగించి ఆఫ్‌లైన్‌లో పనిచేస్తోంది.' :
+        language === 'ta' ? 'சாதனம் உள்ளூர் IndexedDB அறிவுப் பொதிகளைப் பயன்படுத்தி ஆஃப்லைனில் இயங்குகிறது.' :
         'Operating offline using local IndexedDB knowledge packs.',
+        language === 'hi' ? 'स्थानीय भंडारण में कोई मेल खाता सत्यापित अंश नहीं मिला।' :
+        language === 'te' ? 'స్థానిక నిల్వలో సరిపోలే ధృవీకరించబడిన ఆధారాలు కనుగొనబడలేదు.' :
+        language === 'ta' ? 'உள்ளூர் சேமிப்பகத்தில் பொருந்தக்கூடிய சரிபார்க்கப்பட்ட சான்றுகள் எதுவும் கிடைக்கவில்லை.' :
         'No matching verified passages were found in local storage.',
       ],
       generatedAt: new Date().toISOString(),
@@ -436,10 +468,23 @@ export async function searchOffline(
     )
     .join('\n\n');
 
-  const summary =
-    `Grounded evidence retrieved from offline installed knowledge pack for "${query}":\n\n` +
-    `${passagesText}\n\n` +
-    'Notice: This result was generated locally from stored reference passages without internet connectivity. Reconnect to verify current pesticide registrations and freshness.';
+  const summaryPrefix: Record<string, string> = {
+    en: `Grounded evidence retrieved from offline installed knowledge pack for "${query}":`,
+    hi: `"${query}" के लिए ऑफ़लाइन स्थापित ज्ञान पैक से प्राप्त प्रामाणिक साक्ष्य:`,
+    te: `"${query}" కోసం ఆఫ్‌లైన్ ఇన్‌స్టాల్ చేసిన నాలెడ్జ్ ప్యాక్ నుండి సేకరించిన ఆధారాలు:`,
+    ta: `"${query}" க்காக ஆஃப்லைனில் நிறுவப்பட்ட அறிவுப் பொதியிலிருந்து பெறப்பட்ட சான்றுகள்:`,
+  };
+
+  const summaryNotice: Record<string, string> = {
+    en: 'Notice: This result was generated locally from stored reference passages without internet connectivity. Reconnect to verify current pesticide registrations and freshness.',
+    hi: 'सूचना: यह परिणाम इंटरनेट कनेक्टिविटी के बिना संग्रहीत संदर्भ अंशों से स्थानीय रूप से तैयार किया गया है। वर्तमान कीटनाशक पंजीकरण और नवीनतम जानकारी के लिए ऑनलाइन कनेक्ट करें।',
+    te: 'గమనిక: ఈ ఫలితం ఇంటర్నెట్ లేకుండా నిల్వ చేయబడిన అంశాల నుండి స్థానికంగా రూపొందించబడింది. ప్రస్తుత మందుల వివరాలను ధృవీకరించడానికి తిరిగి కనెక్ట్ అవ్వండి.',
+    ta: 'அறிவிப்பு: இந்த முடிவு இணைய இணைப்பு இல்லாமல் சேமிக்கப்பட்ட குறிப்புப் பத்திகளிலிருந்து உருவாக்கப்பட்டது. தற்போதைய பூச்சிக்கொல்லி விதிகளுக்கு மீண்டும் ஆன்லைனில் இணையவும்.',
+  };
+
+  const prefix = summaryPrefix[language] || summaryPrefix.en;
+  const notice = summaryNotice[language] || summaryNotice.en;
+  const summary = `${prefix}\n\n${passagesText}\n\n${notice}`;
 
   return {
     id: `ans-offline-${Date.now()}`,
@@ -448,8 +493,17 @@ export async function searchOffline(
     overallStatus: 'applicable',
     evidenceChunks: eligible,
     caveats: [
+      language === 'hi' ? 'ऑफ़लाइन मोड: इस डिवाइस पर स्थानीय रूप से संग्रहीत ज्ञान पैक से प्राप्त।' :
+      language === 'te' ? 'ఆఫ్‌లైన్ మోడ్: ఈ పరికరంలో స్థానికంగా నిల్వ చేయబడిన నాలెడ్జ్ ప్యాక్ నుండి తిరిగి పొందబడింది.' :
+      language === 'ta' ? 'ஆஃப்லைன் முறை: இந்த சாதனத்தில் உள்ளூரில் சேமிக்கப்பட்ட அறிவுப் பொதியிலிருந்து பெறப்பட்டது.' :
       'Offline Mode: Retrieved from locally stored knowledge pack on this device.',
+      language === 'hi' ? 'लाइव क्लाउड मॉडल और मोंगोडीबी एटलस से पूछताछ नहीं की गई थी।' :
+      language === 'te' ? 'లైవ్ క్లౌడ్ మోడల్స్ మరియు మోంగోడిబి అట్లాస్ ప్రశ్నించబడలేదు.' :
+      language === 'ta' ? 'நேரலை கிளவுட் மாதிரிகள் மற்றும் மோங்கோடிபி அட்லஸ் வினவப்படவில்லை.' :
       'Live cloud models and MongoDB Atlas were not queried.',
+      language === 'hi' ? 'डिस्कनेक्ट होने पर विनियामक अपडेट सत्यापित नहीं किए जा सकते।' :
+      language === 'te' ? 'డిస్‌కనెక్ట్ అయినప్పుడు నియంత్రణ నవీకరణలను ధృవీకరించలేము.' :
+      language === 'ta' ? 'இணைப்பு இல்லாத போது விதிமுறை புதுப்பிப்புகளை சரிபார்க்க முடியாது.' :
       'Source freshness and regulatory updates cannot be verified while disconnected.',
     ],
     generatedAt: new Date().toISOString(),

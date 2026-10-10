@@ -8,6 +8,8 @@ import { CardSkeleton } from '../components/Skeleton';
 import { ErrorState } from '../components/ErrorState';
 import { OfflineServiceScreen } from '../components/OfflineServiceScreen';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useTranslation } from '../i18n/LanguageContext';
+import { LanguageSelector } from '../components/LanguageSelector';
 
 type LibraryState = 'loading' | 'ready' | 'empty' | 'unavailable' | 'offline' | 'error';
 
@@ -19,6 +21,7 @@ function formatBytes(bytes: number): string {
 
 export function LibraryPage() {
   const isOnline = useOnlineStatus();
+  const { t } = useTranslation();
   const [state, setState] = useState<LibraryState>('loading');
   const [packs, setPacks] = useState<KnowledgePack[]>([]);
   const [isPreview, setIsPreview] = useState(false);
@@ -54,7 +57,6 @@ export function LibraryPage() {
           setState('offline');
         }
       } else if (err instanceof BackendUnavailableError) {
-        // Check if there are local packs
         try {
           const localPacks = await activeService.listPacks();
           if (localPacks.length > 0) {
@@ -65,7 +67,7 @@ export function LibraryPage() {
         } catch {}
         setState('unavailable');
       } else {
-        setErrorMsg(err instanceof Error ? err.message : 'Could not load the library.');
+        setErrorMsg(err instanceof Error ? err.message : t.errorGeneric);
         setState('error');
       }
     }
@@ -96,14 +98,17 @@ export function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
-          Offline Library
-        </h1>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          Knowledge packs will bundle evidence for offline agricultural reference. Once a pack is
-          downloaded and stored on your device, you can consult it without connectivity.
-        </p>
+      {/* Header with Title and Language Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-1">
+            {t.libraryTitle}
+          </h1>
+          <p className="text-muted-foreground text-xs md:text-sm leading-relaxed max-w-2xl">
+            {t.libraryDescription}
+          </p>
+        </div>
+        <LanguageSelector />
       </div>
 
       {!isOnline && (
@@ -113,7 +118,7 @@ export function LibraryPage() {
         >
           <WifiOff size={18} className="text-amber-700 shrink-0" aria-hidden="true" />
           <span>
-            <strong>Offline mode:</strong> The app shell is active. Remote catalog discovery requires an internet connection.
+            <strong>{t.offlineMode}:</strong> {t.cachedShellOffline}
           </span>
         </div>
       )}
@@ -127,12 +132,12 @@ export function LibraryPage() {
 
       {state === 'error' && <ErrorState message={errorMsg} onRetry={() => void load()} />}
 
-      {/* Offline screen — helpful, honest, and preserves the offline shell */}
+      {/* Offline screen */}
       {state === 'offline' && (
         <div className="space-y-5" data-testid="library-offline-screen">
           <OfflineServiceScreen
-            title="Knowledge pack catalog unavailable offline"
-            message="You are currently offline. Discovering, inspecting, and synchronizing knowledge packs requires an active network connection. The application shell is loaded from browser cache, but no packs are currently saved locally on this device."
+            title={t.libraryOfflineCatalogTitle}
+            message={t.libraryOfflineCatalogDesc}
             onRetry={() => void load()}
             secondaryAction={
               <button
@@ -141,25 +146,22 @@ export function LibraryPage() {
                 className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer"
               >
                 <Eye size={16} aria-hidden="true" />
-                Preview illustrative packs
+                {t.libraryPreviewPacksBtn}
               </button>
             }
           />
         </div>
       )}
 
-      {/* Backend unavailable — distinct from an empty library */}
+      {/* Backend unavailable */}
       {state === 'unavailable' && (
         <div className="space-y-5">
           <div className="rounded-2xl border border-border bg-info-bg p-5 flex items-start gap-3">
             <ServerOff size={20} className="text-info mt-0.5 shrink-0" aria-hidden="true" />
             <div className="text-sm">
-              <p className="font-semibold text-foreground">Library unavailable — backend not connected</p>
+              <p className="font-semibold text-foreground">{t.libraryUnavailableTitle}</p>
               <p className="text-muted-foreground mt-1 leading-relaxed">
-                We can't list knowledge packs because the backend isn't connected. This is different
-                from an empty library: there may be packs available once the service is reachable.
-                Downloading and offline search require MongoDB Atlas storage and a local evidence
-                store (IndexedDB), planned for a future milestone.
+                {t.libraryUnavailableDesc}
               </p>
               <button
                 type="button"
@@ -167,7 +169,7 @@ export function LibraryPage() {
                 className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer"
               >
                 <Eye size={16} aria-hidden="true" />
-                Preview illustrative packs
+                {t.libraryPreviewPacksBtn}
               </button>
             </div>
           </div>
@@ -178,20 +180,19 @@ export function LibraryPage() {
       {state === 'empty' && (
         <div className="rounded-2xl border border-border bg-card p-8 text-center">
           <Inbox size={40} className="text-muted-foreground mx-auto mb-3" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-1">No packs installed</h2>
+          <h2 className="font-heading text-lg font-semibold text-foreground mb-1">{t.libraryEmptyTitle}</h2>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Your offline library is empty. When packs become available, you'll be able to download them here.
+            {t.libraryEmptyDesc}
           </p>
         </div>
       )}
 
-      {/* Packs available (real or previewed) */}
+      {/* Packs available */}
       {state === 'ready' && (
         <div className="space-y-5">
           {isPreview && (
             <div className="rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-4 text-sm text-amber-900">
-              <p className="font-semibold">Illustrative preview — these packs are placeholders.</p>
-              <p className="mt-1">They cannot be downloaded and do not represent real installed data.</p>
+              <p className="font-semibold">{t.illustrativePackWarning}</p>
             </div>
           )}
 
@@ -201,15 +202,15 @@ export function LibraryPage() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by crop, region, or name…"
-              aria-label="Filter packs"
+              placeholder={t.librarySearchPlaceholder}
+              aria-label={t.libraryFilterAria}
               className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No packs match "{search}".
+              {t.noPacksMatching}
             </p>
           ) : (
             <div className="space-y-4">
@@ -227,7 +228,7 @@ export function LibraryPage() {
                       <h2 className="font-heading text-base font-semibold text-card-foreground">{pack.name}</h2>
                       {pack.status === 'downloaded' && (
                         <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5">
-                          Installed
+                          {t.packInstalled}
                         </span>
                       )}
                     </div>
@@ -243,7 +244,7 @@ export function LibraryPage() {
                         <HardDrive size={12} aria-hidden="true" />
                         {formatBytes(pack.sizeBytes)}
                       </span>
-                      <span>{pack.sourceCount} sources</span>
+                      <span>{pack.sourceCount} {t.packSourcesCount}</span>
                       <span>v{pack.version}</span>
                     </div>
                   </div>

@@ -322,6 +322,7 @@ export function FarmerInputSection({
             if (validationError) setValidationError(null);
           }}
           placeholder={t.questionPlaceholder}
+          aria-label={t.describeProblemAria || 'Describe or Speak the Problem'}
           rows={3}
           disabled={isSubmitting}
           className="w-full bg-transparent resize-none text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none"

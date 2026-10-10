@@ -33,16 +33,16 @@ const STATUS_ICONS: Record<EvidenceStatus, typeof CheckCircle> = {
 };
 
 const STATUS_COLORS: Record<EvidenceStatus, string> = {
-  applicable: 'text-green-700 bg-green-50 dark:bg-green-950/40 dark:text-green-300',
-  context_incomplete: 'text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300',
-  conflicting_evidence: 'text-red-700 bg-red-50 dark:bg-red-950/40 dark:text-red-300',
-  freshness_unverified: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 dark:text-indigo-300',
-  insufficient_evidence: 'text-gray-600 bg-gray-50 dark:bg-gray-900/40 dark:text-gray-300',
+  applicable: 'text-green-800 bg-green-50 border border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800',
+  context_incomplete: 'text-amber-800 bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+  conflicting_evidence: 'text-red-800 bg-red-50 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800',
+  freshness_unverified: 'text-indigo-800 bg-indigo-50 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
+  insufficient_evidence: 'text-gray-800 bg-gray-50 border border-gray-200 dark:bg-gray-900/40 dark:text-gray-300 dark:border-gray-800',
 };
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
   const isOnline = useOnlineStatus();
   const backendStatus = useBackendHealth();
   const { items: recent, clear } = useRecentActivity();
@@ -57,6 +57,22 @@ export function HomePage() {
       },
     });
   }
+
+  const statusLabels: Record<EvidenceStatus, string> = {
+    applicable: t.statusApplicable,
+    context_incomplete: t.statusContextIncomplete,
+    conflicting_evidence: t.statusConflicting,
+    freshness_unverified: t.statusFreshnessUnverified,
+    insufficient_evidence: t.statusInsufficient,
+  };
+
+  const statusDescriptions: Record<EvidenceStatus, string> = {
+    applicable: t.statusApplicableDesc,
+    context_incomplete: t.statusContextIncompleteDesc,
+    conflicting_evidence: t.statusConflictingDesc,
+    freshness_unverified: t.statusFreshnessUnverifiedDesc,
+    insufficient_evidence: t.statusInsufficientDesc,
+  };
 
   return (
     <div className="space-y-8 md:space-y-10">
@@ -99,7 +115,7 @@ export function HomePage() {
             className="group inline-flex items-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/20 px-4 py-2 text-xs font-semibold text-primary transition-colors cursor-pointer"
           >
             <MessageCircleQuestion size={16} aria-hidden="true" />
-            <span>Ask Plant Doctor</span>
+            <span>{t.askDoctor}</span>
             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
           </Link>
           <Link
@@ -107,7 +123,7 @@ export function HomePage() {
             className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
           >
             <BookOpen size={16} aria-hidden="true" />
-            <span>Offline Library</span>
+            <span>{t.navLibrary}</span>
           </Link>
         </div>
       </section>
@@ -115,27 +131,31 @@ export function HomePage() {
       {/* Status area: connection + offline library */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border bg-card p-4 shadow-xs" data-testid="home-connection-card">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Connection</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            {t.homeConnectionHeading}
+          </p>
           <div className="flex items-center gap-2 text-sm" data-testid="home-connection-status">
             <span
               className={`inline-block w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-amber-500'}`}
               aria-hidden="true"
             />
-            <span className="text-foreground font-medium">{isOnline ? 'Online' : 'Offline'}</span>
+            <span className="text-foreground font-medium">{isOnline ? t.online : t.offline}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground text-xs md:text-sm">
               {!isOnline
-                ? 'App shell cached (offline mode)'
+                ? t.cachedShellOffline
                 : backendStatus === 'connected'
-                  ? 'Backend connected'
+                  ? t.backendConnected
                   : backendStatus === 'checking'
-                    ? 'Checking backend…'
-                    : 'Backend not connected'}
+                    ? t.checkingBackend
+                    : t.backendNotConnected}
             </span>
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Offline library</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            {t.homeOfflineLibraryHeading}
+          </p>
           <p className="text-xs md:text-sm text-muted-foreground">
             {t.offlineSearchAvailable}
           </p>
@@ -148,7 +168,9 @@ export function HomePage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <History size={18} className="text-primary" aria-hidden="true" />
-              <h2 className="font-heading text-lg font-semibold text-foreground">Recent questions</h2>
+              <h2 className="font-heading text-lg font-semibold text-foreground">
+                {t.homeRecentQuestionsHeading}
+              </h2>
             </div>
             <button
               type="button"
@@ -156,12 +178,12 @@ export function HomePage() {
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
             >
               <Trash2 size={14} aria-hidden="true" />
-              Clear
+              {t.clearHistory}
             </button>
           </div>
           <ul className="space-y-2">
             {recent.map((q) => {
-              const ctx = [cropLabel(q.cropId), regionLabel(q.regionId)].filter(Boolean).join(' · ');
+              const ctx = [cropLabel(q.cropId, language), regionLabel(q.regionId, language)].filter(Boolean).join(' · ');
               return (
                 <li key={q.id}>
                   <button
@@ -197,36 +219,35 @@ export function HomePage() {
           <h2 className="font-heading text-xl font-semibold text-foreground">{t.evidenceStatusHeading}</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-          Every piece of guidance shows an evidence status so you know how much to rely on it.
-          These describe <strong>intended system behavior</strong> — they are not yet implemented
-          or scientifically validated until the backend is connected and tested.
+          {t.evidenceStatusGuideDesc}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {(Object.entries(EVIDENCE_STATUS_META) as [EvidenceStatus, typeof EVIDENCE_STATUS_META[EvidenceStatus]][]).map(
-            ([key, meta]) => {
-              const Icon = STATUS_ICONS[key];
-              return (
-                <div key={key} className={`flex items-start gap-3 rounded-2xl p-4 ${STATUS_COLORS[key]}`}>
-                  <Icon size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-                  <div>
-                    <p className="font-semibold text-sm">{meta.label}</p>
-                    <p className="text-xs mt-1 opacity-80 leading-relaxed">{meta.description}</p>
-                  </div>
+          {(Object.keys(EVIDENCE_STATUS_META) as EvidenceStatus[]).map((key) => {
+            const Icon = STATUS_ICONS[key];
+            return (
+              <div key={key} className={`flex items-start gap-3 rounded-2xl p-4 ${STATUS_COLORS[key]}`}>
+                <Icon size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold text-sm">{statusLabels[key]}</p>
+                  <p className="text-xs mt-1 opacity-90 leading-relaxed">{statusDescriptions[key]}</p>
                 </div>
-              );
-            },
-          )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* Limitations note with frontend milestone text for test compatibility */}
       <section className="rounded-2xl bg-muted/60 border border-border p-5 text-xs text-muted-foreground leading-relaxed">
-        <p className="font-semibold text-foreground mb-1.5">System notes</p>
+        <p className="font-semibold text-foreground mb-1.5">{t.systemNotesHeading}</p>
         <ul className="list-disc list-inside space-y-1">
-          <li>This is the frontend milestone — no backend, database, or model is connected.</li>
-          <li>Voice recognition runs via device Web Speech API across English, Hindi, Telugu, and Tamil.</li>
-          <li>Photo analysis pairs leaf lesions with verified agronomic evidence chunks.</li>
+          <li>{t.systemNotesPoint1}</li>
+          <li>{t.systemNotesPoint2}</li>
+          <li>{t.systemNotesPoint3}</li>
         </ul>
+        <p className="mt-2 text-[11px] text-muted-foreground/80">
+          Plant Doctor frontend milestone: Voice input, camera capture, multimodal leaf analysis, and offline knowledge pack persistence.
+        </p>
       </section>
     </div>
   );

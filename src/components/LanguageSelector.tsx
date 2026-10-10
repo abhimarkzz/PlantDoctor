@@ -10,15 +10,18 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ className = '', variant = 'pill' }: LanguageSelectorProps) {
   const { language, setLanguage, availableLanguages, t } = useTranslation();
 
-  if (variant === 'dropdown') {
+  if (variant === 'dropdown' || variant === 'compact') {
     return (
-      <div className={`relative inline-flex items-center gap-2 ${className}`}>
-        <Globe size={18} className="text-primary shrink-0" aria-hidden="true" />
+      <div className={`relative inline-flex items-center gap-1.5 ${className}`}>
+        <Globe size={variant === 'compact' ? 16 : 18} className="text-primary shrink-0" aria-hidden="true" />
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
           aria-label={t.selectLanguage}
-          className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer shadow-sm"
+          data-testid="language-selector-select"
+          className={`rounded-xl border border-border bg-card font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer shadow-xs ${
+            variant === 'compact' ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'
+          }`}
         >
           {availableLanguages.map((lang) => (
             <option key={lang.code} value={lang.code}>
@@ -35,6 +38,7 @@ export function LanguageSelector({ className = '', variant = 'pill' }: LanguageS
     <div
       role="group"
       aria-label={t.chooseLanguage}
+      data-testid="language-selector-pills"
       className={`flex flex-wrap items-center gap-2 ${className}`}
     >
       <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-1">
@@ -49,6 +53,7 @@ export function LanguageSelector({ className = '', variant = 'pill' }: LanguageS
             type="button"
             onClick={() => setLanguage(lang.code)}
             aria-pressed={isSelected}
+            data-testid={`lang-btn-${lang.code}`}
             className={`min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               isSelected
                 ? 'bg-primary text-on-primary shadow-sm ring-2 ring-primary/30'

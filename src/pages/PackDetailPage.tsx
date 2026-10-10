@@ -14,6 +14,7 @@ import {
   Trash2,
   CheckCircle2,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { activeService, demoService } from '../services';
 import type { KnowledgePack } from '../models/types';
@@ -21,6 +22,8 @@ import { EmptyState } from '../components/EmptyState';
 import { IllustrativeBanner } from '../components/IllustrativeBanner';
 import { CardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
+import { useTranslation } from '../i18n/LanguageContext';
+import { LanguageSelector } from '../components/LanguageSelector';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -34,6 +37,7 @@ function formatTime(iso: string | null): string {
 export function PackDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { notify } = useToast();
+  const { t } = useTranslation();
   const [pack, setPack] = useState<KnowledgePack | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -72,7 +76,7 @@ export function PackDetailPage() {
       notify(`Downloaded and saved '${pack.name}' to local IndexedDB.`, 'success');
       await loadPack();
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Failed to download pack.', 'error');
+      notify(err instanceof Error ? err.message : t.errorGeneric, 'error');
     } finally {
       setIsDownloading(false);
     }
@@ -86,7 +90,7 @@ export function PackDetailPage() {
       notify(`Removed '${pack.name}' from device storage.`, 'info');
       await loadPack();
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Failed to remove pack.', 'error');
+      notify(err instanceof Error ? err.message : t.errorGeneric, 'error');
     } finally {
       setIsRemoving(false);
     }
@@ -105,8 +109,8 @@ export function PackDetailPage() {
     return (
       <EmptyState
         icon={<Info size={48} />}
-        title="Pack not found"
-        description="This knowledge pack does not exist or could not be loaded."
+        title={t.packNotFoundTitle}
+        description={t.packNotFoundDesc}
         action={
           <Link to="/library" className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-dark cursor-pointer">
             Back to Library
@@ -120,17 +124,20 @@ export function PackDetailPage() {
 
   const statusLabel: Record<KnowledgePack['status'], string> = {
     available: 'Available on server',
-    downloading: 'Downloading…',
-    downloaded: 'Installed locally (IndexedDB)',
+    downloading: t.packDownloading,
+    downloaded: t.packInstalled,
     update_available: 'Update available',
   };
 
   return (
     <div className="space-y-6">
-      <Link to="/library" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-        <ArrowLeft size={16} aria-hidden="true" />
-        Back to Library
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link to="/library" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Library
+        </Link>
+        <LanguageSelector variant="compact" />
+      </div>
 
       {isDemo && <IllustrativeBanner />}
 
@@ -140,7 +147,7 @@ export function PackDetailPage() {
           {isDownloaded && (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5">
               <CheckCircle2 size={12} aria-hidden="true" />
-              Installed Offline
+              {t.packInstalled}
             </span>
           )}
         </div>
@@ -154,10 +161,10 @@ export function PackDetailPage() {
       {/* Identity & status grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Tag, label: 'Version', value: `v${pack.version}` },
-          { icon: HardDrive, label: 'Size', value: formatBytes(pack.sizeBytes) },
-          { icon: MapPin, label: 'Region', value: pack.region ?? 'Global' },
-          { icon: Download, label: 'Storage status', value: statusLabel[pack.status] },
+          { icon: Tag, label: t.packVersion, value: `v${pack.version}` },
+          { icon: HardDrive, label: t.packSize, value: formatBytes(pack.sizeBytes) },
+          { icon: MapPin, label: t.regionLabel, value: pack.region ?? 'Global' },
+          { icon: Download, label: 'Storage', value: statusLabel[pack.status] },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -172,9 +179,9 @@ export function PackDetailPage() {
       {/* Sync & verification */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { icon: Calendar, label: 'Source last updated', value: formatTime(pack.lastUpdated) },
-          { icon: RefreshCw, label: 'Last synchronized (this device)', value: formatTime(pack.lastSynced) },
-          { icon: ShieldCheck, label: 'Sources last verified', value: formatTime(pack.lastVerified) },
+          { icon: Calendar, label: t.packLastUpdated, value: formatTime(pack.lastUpdated) },
+          { icon: RefreshCw, label: 'Last synced', value: formatTime(pack.lastSynced) },
+          { icon: ShieldCheck, label: t.packLastVerified, value: formatTime(pack.lastVerified) },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -188,7 +195,7 @@ export function PackDetailPage() {
 
       {/* Crop categories */}
       <div>
-        <h2 className="font-heading text-base font-semibold text-foreground mb-3">Crop categories</h2>
+        <h2 className="font-heading text-base font-semibold text-foreground mb-3">{t.cropLabel}</h2>
         <div className="flex flex-wrap gap-2">
           {pack.cropCategories.map((cat) => (
             <span key={cat} className="inline-block rounded-full bg-primary/10 text-primary text-xs font-medium px-3 py-1">
@@ -222,7 +229,7 @@ export function PackDetailPage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 px-5 py-2.5 text-sm font-medium hover:bg-destructive/20 cursor-pointer disabled:opacity-50"
               >
                 {isRemoving ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                Remove from device
+                {t.packRemoveBtn}
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -240,7 +247,7 @@ export function PackDetailPage() {
               {isDownloading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" aria-hidden="true" />
-                  Downloading & verifying checksum…
+                  {t.packDownloading}
                 </>
               ) : (
                 <>
@@ -263,13 +270,16 @@ export function PackDetailPage() {
         )}
       </div>
 
-      {/* Known offline limitations */}
-      <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
-        <h2 className="font-heading text-base font-semibold text-foreground mb-2">Known offline limitations</h2>
-        <ul className="text-sm text-foreground/80 space-y-1.5">
-          <li className="flex gap-2"><span className="text-amber-600">•</span>Offline evidence is as current as the last successful synchronization ({formatTime(pack.lastSynced)}).</li>
-          <li className="flex gap-2"><span className="text-amber-600">•</span>Cloud models and live database vectors require connectivity; offline answers use deterministic passage matching.</li>
-          <li className="flex gap-2"><span className="text-amber-600">•</span>Always confirm chemical regulations with local agricultural authorities before application.</li>
+      {/* Known offline limitations with High Contrast Warning */}
+      <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-5 text-amber-950 dark:text-amber-100">
+        <h2 className="font-heading text-base font-semibold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+          <AlertTriangle size={18} className="text-amber-700 dark:text-amber-400" aria-hidden="true" />
+          Known offline limitations
+        </h2>
+        <ul className="text-sm text-amber-900 dark:text-amber-200 space-y-1.5">
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Offline evidence is as current as the last successful synchronization ({formatTime(pack.lastSynced)}).</li>
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Cloud models and live database vectors require connectivity; offline answers use deterministic passage matching.</li>
+          <li className="flex gap-2"><span className="text-amber-700 dark:text-amber-400 font-bold">•</span>Always confirm chemical regulations with local agricultural authorities before application.</li>
         </ul>
       </div>
     </div>

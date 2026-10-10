@@ -10,17 +10,20 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Home', icon: Home },
-  { to: '/ask', label: 'Ask', icon: MessageCircleQuestion },
-  { to: '/library', label: 'Library', icon: BookOpen },
-  { to: '/about', label: 'About', icon: Info },
-] as const;
+import { useTranslation } from '../i18n/LanguageContext';
 
 export function NavBar() {
   const isOnline = useOnlineStatus();
+  const { t } = useTranslation();
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  const navItems = [
+    { to: '/', label: t.navHome, icon: Home },
+    { to: '/ask', label: t.navAsk, icon: MessageCircleQuestion },
+    { to: '/library', label: t.navLibrary, icon: BookOpen },
+    { to: '/about', label: t.navAbout, icon: Info },
+  ];
 
   useEffect(() => {
     function handleBeforeInstallPrompt(e: Event) {
@@ -55,16 +58,16 @@ export function NavBar() {
               aria-hidden="true"
             />
             <span className="font-medium text-foreground">
-              {isOnline ? 'Network Online' : 'Offline Mode'}
+              {isOnline ? t.networkOnline : t.offlineMode}
             </span>
             <span className="text-muted-foreground ml-auto text-[11px]">
-              {isOnline ? 'Ready' : 'Cached Shell'}
+              {isOnline ? t.ready : t.cachedShell}
             </span>
           </div>
         </div>
 
         <div className="flex flex-col gap-1 px-3 py-4 flex-1">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -93,11 +96,11 @@ export function NavBar() {
           <button
             type="button"
             onClick={() => setShowInstallModal(true)}
-            aria-label="Install Plant Doctor PWA"
+            aria-label={t.installAppPwa}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
           >
             <Download size={15} aria-hidden="true" />
-            <span>Install App (PWA)</span>
+            <span>{t.installAppPwa}</span>
           </button>
         </div>
 
@@ -113,7 +116,7 @@ export function NavBar() {
           className="md:hidden sticky top-0 left-0 right-0 z-40 bg-amber-600 text-white text-[11px] font-medium py-1.5 px-3 text-center flex items-center justify-center gap-1.5 shadow-xs"
         >
           <WifiOff size={12} aria-hidden="true" />
-          <span>Offline — Running from cached shell</span>
+          <span>{t.offlineMode} — {t.cachedShell}</span>
         </div>
       )}
 
@@ -122,7 +125,7 @@ export function NavBar() {
         aria-label="Main navigation"
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
       >
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -140,11 +143,11 @@ export function NavBar() {
         <button
           type="button"
           onClick={() => setShowInstallModal(true)}
-          aria-label="Install App"
+          aria-label={t.installApp}
           className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground cursor-pointer min-w-[64px]"
         >
           <Download size={22} aria-hidden="true" />
-          Install
+          {t.installApp}
         </button>
       </nav>
 
