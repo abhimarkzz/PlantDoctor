@@ -41,24 +41,67 @@ class IngestionService:
         raw_text = doc_req.text.strip()
         checksum = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
 
-        # Generate or reuse source ID
-        source_id = f"src-{uuid.uuid4().hex[:8]}"
+        # Check for existing source with same identifier or checksum to prevent accidental duplicate ingestion
+        existing = None
+        if doc_req.identifier:
+            existing = self.source_repo.find_by_identifier(doc_req.identifier)
+        if not existing and checksum:
+            existing = self.source_repo.find_by_checksum(checksum)
 
-        source = SourceRecord(
-            id=source_id,
-            identifier=doc_req.identifier,
-            title=doc_req.title,
-            authors=doc_req.authors,
-            institution=doc_req.institution,
-            published_date=doc_req.published_date,
-            last_verified=doc_req.last_verified or doc_req.published_date,
-            url=doc_req.url,
-            crops=doc_req.crops,
-            regions=doc_req.regions,
-            license=doc_req.license,
-            checksum=checksum,
-            status=SourceStatus.VERIFIED,
-        )
+        if existing:
+            # If checksum is identical, it's an exact duplicate: return existing without re-embedding
+            if existing.checksum == checksum:
+                existing_chunks = self.chunk_repo.find_by_source_id(existing.id)
+                logger.info(f"Duplicate document detected for identifier '{doc_req.identifier}'. Returning existing source {existing.id}.")
+                return IngestResponse(
+                    source_id=existing.id,
+                    title=existing.title,
+                    chunks_created=len(existing_chunks),
+                    checksum=checksum,
+                    message="Document already ingested with matching content checksum. Existing record preserved.",
+                )
+
+            # Safe source update: increment version and clean old chunks before re-indexing
+            source_id = existing.id
+            version_parts = existing.version.split(".")
+            try:
+                new_minor = int(version_parts[-1]) + 1
+                new_version = f"{version_parts[0]}.{new_minor}"
+            except Exception:
+                new_version = f"{existing.version}.1"
+
+            source = existing.model_copy(update={
+                "title": doc_req.title,
+                "authors": doc_req.authors or existing.authors,
+                "institution": doc_req.institution or existing.institution,
+                "published_date": doc_req.published_date or existing.published_date,
+                "last_verified": doc_req.last_verified or doc_req.published_date or existing.last_verified,
+                "url": doc_req.url or existing.url,
+                "crops": doc_req.crops or existing.crops,
+                "regions": doc_req.regions or existing.regions,
+                "license": doc_req.license or existing.license,
+                "checksum": checksum,
+                "version": new_version,
+            })
+            self.chunk_repo.delete_by_source_id(source.id)
+        else:
+            source_id = f"src-{uuid.uuid4().hex[:8]}"
+            source = SourceRecord(
+                id=source_id,
+                identifier=doc_req.identifier,
+                title=doc_req.title,
+                authors=doc_req.authors,
+                institution=doc_req.institution,
+                published_date=doc_req.published_date,
+                last_verified=doc_req.last_verified or doc_req.published_date,
+                url=doc_req.url,
+                crops=doc_req.crops,
+                regions=doc_req.regions,
+                license=doc_req.license,
+                checksum=checksum,
+                status=SourceStatus.VERIFIED,
+            )
+
         self.source_repo.upsert(source)
 
         # Chunk the text into meaningful passages
