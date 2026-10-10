@@ -1,0 +1,282 @@
+{
+  "model_id": "mobilenet_v2_plant_disease",
+  "name": "MobileNetV2 Agricultural Plant Health Classifier",
+  "architecture": "MobileNetV2",
+  "version": "1.0.0",
+  "format": "ONNX",
+  "file_name": "mobilenet_v2_plant_disease.onnx",
+  "size_bytes": 9227028,
+  "checksum_sha256": "c209f96f0a87a265b0ff6765c2e84d48038a7d8b8692d7629445b4513c344eb7",
+  "input": {
+    "name": "pixel_values",
+    "shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "type": "float32"
+  },
+  "output": {
+    "name": "logits",
+    "shape": [
+      1,
+      38
+    ],
+    "type": "float32"
+  },
+  "preprocessing": {
+    "resize_shortest_edge": 256,
+    "center_crop": [
+      224,
+      224
+    ],
+    "rescale_factor": 0.00392156862745098,
+    "mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "std": [
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  "confidence_policy": {
+    "calibrated_threshold_high": 0.65,
+    "calibrated_threshold_moderate": 0.35,
+    "abstention_threshold": 0.2,
+    "entropy_abstention_threshold": 3.2
+  },
+  "taxonomy": {
+    "0": {
+      "label": "Apple Scab",
+      "crop": "apple",
+      "condition": "Apple Scab (Venturia inaequalis)",
+      "healthy": false
+    },
+    "1": {
+      "label": "Apple with Black Rot",
+      "crop": "apple",
+      "condition": "Black Rot (Botryosphaeria obtusa)",
+      "healthy": false
+    },
+    "2": {
+      "label": "Cedar Apple Rust",
+      "crop": "apple",
+      "condition": "Cedar Apple Rust (Gymnosporangium juniperi-virginianae)",
+      "healthy": false
+    },
+    "3": {
+      "label": "Healthy Apple",
+      "crop": "apple",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "4": {
+      "label": "Healthy Blueberry Plant",
+      "crop": "blueberry",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "5": {
+      "label": "Cherry with Powdery Mildew",
+      "crop": "cherry",
+      "condition": "Powdery Mildew (Podosphaera clandestina)",
+      "healthy": false
+    },
+    "6": {
+      "label": "Healthy Cherry Plant",
+      "crop": "cherry",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "7": {
+      "label": "Corn (Maize) with Cercospora and Gray Leaf Spot",
+      "crop": "corn",
+      "condition": "Gray Leaf Spot (Cercospora zeae-maydis)",
+      "healthy": false
+    },
+    "8": {
+      "label": "Corn (Maize) with Common Rust",
+      "crop": "corn",
+      "condition": "Common Rust (Puccinia sorghi)",
+      "healthy": false
+    },
+    "9": {
+      "label": "Corn (Maize) with Northern Leaf Blight",
+      "crop": "corn",
+      "condition": "Northern Leaf Blight (Exserohilum turcicum)",
+      "healthy": false
+    },
+    "10": {
+      "label": "Healthy Corn (Maize) Plant",
+      "crop": "corn",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "11": {
+      "label": "Grape with Black Rot",
+      "crop": "grape",
+      "condition": "Black Rot (Guignardia bidwellii)",
+      "healthy": false
+    },
+    "12": {
+      "label": "Grape with Esca (Black Measles)",
+      "crop": "grape",
+      "condition": "Esca / Black Measles",
+      "healthy": false
+    },
+    "13": {
+      "label": "Grape with Isariopsis Leaf Spot",
+      "crop": "grape",
+      "condition": "Leaf Spot (Phaeoisariopsis clavispora)",
+      "healthy": false
+    },
+    "14": {
+      "label": "Healthy Grape Plant",
+      "crop": "grape",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "15": {
+      "label": "Orange with Citrus Greening",
+      "crop": "orange",
+      "condition": "Citrus Greening (Huanglongbing)",
+      "healthy": false
+    },
+    "16": {
+      "label": "Peach with Bacterial Spot",
+      "crop": "peach",
+      "condition": "Bacterial Spot (Xanthomonas campestris pv. pruni)",
+      "healthy": false
+    },
+    "17": {
+      "label": "Healthy Peach Plant",
+      "crop": "peach",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "18": {
+      "label": "Bell Pepper with Bacterial Spot",
+      "crop": "pepper",
+      "condition": "Bacterial Spot (Xanthomonas campestris pv. vesicatoria)",
+      "healthy": false
+    },
+    "19": {
+      "label": "Healthy Bell Pepper Plant",
+      "crop": "pepper",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "20": {
+      "label": "Potato with Early Blight",
+      "crop": "potato",
+      "condition": "Early Blight (Alternaria solani)",
+      "healthy": false
+    },
+    "21": {
+      "label": "Potato with Late Blight",
+      "crop": "potato",
+      "condition": "Late Blight (Phytophthora infestans)",
+      "healthy": false
+    },
+    "22": {
+      "label": "Healthy Potato Plant",
+      "crop": "potato",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "23": {
+      "label": "Healthy Raspberry Plant",
+      "crop": "raspberry",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "24": {
+      "label": "Healthy Soybean Plant",
+      "crop": "soybean",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "25": {
+      "label": "Squash with Powdery Mildew",
+      "crop": "squash",
+      "condition": "Powdery Mildew (Podosphaera xanthii)",
+      "healthy": false
+    },
+    "26": {
+      "label": "Strawberry with Leaf Scorch",
+      "crop": "strawberry",
+      "condition": "Leaf Scorch (Diplocarpon earlianum)",
+      "healthy": false
+    },
+    "27": {
+      "label": "Healthy Strawberry Plant",
+      "crop": "strawberry",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    },
+    "28": {
+      "label": "Tomato with Bacterial Spot",
+      "crop": "tomato",
+      "condition": "Bacterial Spot (Xanthomonas campestris pv. vesicatoria)",
+      "healthy": false
+    },
+    "29": {
+      "label": "Tomato with Early Blight",
+      "crop": "tomato",
+      "condition": "Early Blight (Alternaria solani)",
+      "healthy": false
+    },
+    "30": {
+      "label": "Tomato with Late Blight",
+      "crop": "tomato",
+      "condition": "Late Blight (Phytophthora infestans)",
+      "healthy": false
+    },
+    "31": {
+      "label": "Tomato with Leaf Mold",
+      "crop": "tomato",
+      "condition": "Leaf Mold (Passalora fulva)",
+      "healthy": false
+    },
+    "32": {
+      "label": "Tomato with Septoria Leaf Spot",
+      "crop": "tomato",
+      "condition": "Septoria Leaf Spot (Septoria lycopersici)",
+      "healthy": false
+    },
+    "33": {
+      "label": "Tomato with Spider Mites or Two-spotted Spider Mite",
+      "crop": "tomato",
+      "condition": "Two-Spotted Spider Mite (Tetranychus urticae)",
+      "healthy": false
+    },
+    "34": {
+      "label": "Tomato with Target Spot",
+      "crop": "tomato",
+      "condition": "Target Spot (Corynespora cassiicola)",
+      "healthy": false
+    },
+    "35": {
+      "label": "Tomato Yellow Leaf Curl Virus",
+      "crop": "tomato",
+      "condition": "Tomato Yellow Leaf Curl Virus (TYLCV)",
+      "healthy": false
+    },
+    "36": {
+      "label": "Tomato Mosaic Virus",
+      "crop": "tomato",
+      "condition": "Tomato Mosaic Virus (ToMV)",
+      "healthy": false
+    },
+    "37": {
+      "label": "Healthy Tomato Plant",
+      "crop": "tomato",
+      "condition": "Healthy Foliage",
+      "healthy": true
+    }
+  }
+}

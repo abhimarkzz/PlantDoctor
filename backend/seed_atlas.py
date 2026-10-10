@@ -80,38 +80,51 @@ def main():
     pack_service = KnowledgePackService(pack_repo, source_repo, chunk_repo)
 
     source_count_before = source_repo.count()
-    if source_count_before == 0:
-        seeded_count = seed_database_corpus(ingestion_service)
-        print(f"  - Ingested {seeded_count} official agricultural reference documents.")
-        print(f"  - Chunks generated and embedded: {chunk_repo.count()}")
-    else:
-        print(f"  - Atlas already contains {source_count_before} sources ({chunk_repo.count()} chunks). Skipping re-seed.")
+    seeded_count = seed_database_corpus(ingestion_service)
+    print(f"  - Ingested/verified {seeded_count} official agricultural reference documents.")
+    print(f"  - Current sources: {source_repo.count()}, Chunks embedded: {chunk_repo.count()}")
 
     # 3. Build baseline knowledge packs
     print("\nStep 3: Generating baseline offline knowledge packs in Atlas...")
-    pack_count_before = pack_repo.count()
-    if pack_count_before == 0:
-        p1 = pack_service.build_pack(
-            pack_id="pack-veg-001",
-            name="Solanaceous & Tropical Vegetables",
-            description="Diagnostic evidence and nutrient disorder management for tomato, pepper, and eggplant.",
-            version="1.0.0",
-            crop_categories=["Tomato", "Pepper", "Eggplant"],
-            region="Tropical / Sub-tropical",
-        )
-        print(f"  - Created pack: {p1.name} (SHA-256: {p1.checksum[:16]}...)")
+    p1 = pack_service.build_pack(
+        pack_id="pack-veg-001",
+        name="Solanaceous & Tropical Vegetables",
+        description="Diagnostic evidence and integrated management for tomato, pepper, and eggplant.",
+        version="1.1.0",
+        crop_categories=["Tomato", "Pepper", "Eggplant", "Chilli"],
+        region="Tropical / Sub-tropical",
+    )
+    print(f"  - Updated pack: {p1.name} (v{p1.version}, SHA-256: {p1.checksum[:16]}...)")
 
-        p2 = pack_service.build_pack(
-            pack_id="pack-rice-001",
-            name="Lowland Paddy Rice Pathology",
-            description="Blast prevention and water regulation for tropical flooded lowland rice.",
-            version="1.0.0",
-            crop_categories=["Rice"],
-            region="Tropical",
-        )
-        print(f"  - Created pack: {p2.name} (SHA-256: {p2.checksum[:16]}...)")
-    else:
-        print(f"  - Atlas already contains {pack_count_before} knowledge packs.")
+    p2 = pack_service.build_pack(
+        pack_id="pack-potato-001",
+        name="Potato Pathology & Blight Management",
+        description="Integrated management of Late Blight (Phytophthora infestans) and Early Blight for potato.",
+        version="1.0.0",
+        crop_categories=["Potato"],
+        region="Sub-tropical / Temperate",
+    )
+    print(f"  - Created pack: {p2.name} (v{p2.version}, SHA-256: {p2.checksum[:16]}...)")
+
+    p3 = pack_service.build_pack(
+        pack_id="pack-rice-001",
+        name="Lowland Paddy Rice Pathology",
+        description="Blast prevention and water regulation for tropical flooded lowland rice.",
+        version="1.0.0",
+        crop_categories=["Rice"],
+        region="Tropical",
+    )
+    print(f"  - Created pack: {p3.name} (v{p3.version}, SHA-256: {p3.checksum[:16]}...)")
+
+    p4 = pack_service.build_pack(
+        pack_id="pack-cereals-fruits-001",
+        name="Horticultural Fruits & Field Cereals",
+        description="Diagnostic guidance for maize foliar blights, citrus greening, grape esca, and apple scab.",
+        version="1.0.0",
+        crop_categories=["Corn", "Maize", "Orange", "Citrus", "Grape", "Apple"],
+        region="All-India / Temperate & Sub-tropical",
+    )
+    print(f"  - Created pack: {p4.name} (v{p4.version}, SHA-256: {p4.checksum[:16]}...)")
 
     # 4. Ensure evaluation cases
     print("\nStep 4: Ensuring evaluation benchmark cases in Atlas...")

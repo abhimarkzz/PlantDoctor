@@ -105,11 +105,12 @@ class EvidenceChunkOut(CamelModel):
 
 
 class QuestionRequest(BaseModel):
-    query: str = Field(min_length=3, max_length=2000)
+    query: str = Field(default="", max_length=2000)
     crop_id: Optional[str] = Field(default=None, alias="cropId")
     region_id: Optional[str] = Field(default=None, alias="regionId")
     growth_stage_id: Optional[str] = Field(default=None, alias="growthStageId")
     language: Optional[str] = "en"
+    has_image: Optional[bool] = Field(default=False, alias="hasImage")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -124,14 +125,16 @@ class QuestionRequest(BaseModel):
                     data["language"] = data["responseLanguage"]
                 elif "response_language" in data:
                     data["language"] = data["response_language"]
+            if "has_image" not in data and "hasImage" in data:
+                data["has_image"] = data["hasImage"]
         return data
 
     @model_validator(mode="after")
     def _require_meaningful_query(self) -> "QuestionRequest":
-        """Reject whitespace-only or sub-threshold queries after trimming."""
+        """Reject whitespace-only queries when no photo is attached."""
         stripped = self.query.strip()
-        if len(stripped) < 3:
-            raise ValueError("query must contain at least 3 non-whitespace characters")
+        if not self.has_image and len(stripped) < 3:
+            raise ValueError("query must contain at least 3 non-whitespace characters when no photo is attached")
         self.query = stripped
         return self
 

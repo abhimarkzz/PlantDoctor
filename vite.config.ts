@@ -36,10 +36,15 @@ export default defineConfig({
         // Never fall back to the shell for API requests (kept on the network).
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
-        // NOTE: only static assets and Google Fonts are cached below.
+        // NOTE: only static assets, wasm runtimes, and Google Fonts are cached below.
         // The backend API origin is intentionally NOT cached, so no
         // authenticated or evidence responses are persisted by the SW.
         runtimeCaching: [
+          {
+            urlPattern: /\/ort\/.*\.(?:wasm|mjs|js)$/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'ort-wasm-runtime-v1', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

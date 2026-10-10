@@ -196,7 +196,7 @@ export function AskPage() {
         illustrative: answer.isIllustrative,
       });
     } catch (err) {
-      if (err instanceof DeviceOfflineError || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+      if (err instanceof DeviceOfflineError) {
         setState('offline');
         return;
       }
@@ -296,7 +296,13 @@ export function AskPage() {
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="question" className="block text-sm font-medium text-foreground">
                 {t.yourQuestionLabel}
-                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+                {image ? (
+                  <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                    ({t.optional})
+                  </span>
+                ) : (
+                  <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+                )}
               </label>
 
               {/* Speak button embedded beside field */}
@@ -323,10 +329,10 @@ export function AskPage() {
                 setQuery(e.target.value);
                 if (validationError) setValidationError(null);
               }}
-              placeholder={t.questionPlaceholder}
+              placeholder={image ? `${t.checkPlantHealth} — ${t.questionPlaceholder}` : t.questionPlaceholder}
               rows={4}
-              required
-              minLength={10}
+              required={!image}
+              minLength={image ? 0 : 10}
               maxLength={2000}
               aria-invalid={validationError !== null}
               aria-describedby={validationError ? 'question-error question-hint' : 'question-hint'}
@@ -429,7 +435,11 @@ export function AskPage() {
               ) : (
                 <Send size={18} aria-hidden="true" />
               )}
-              {state === 'loading' ? t.searching : t.askBtn}
+              {state === 'loading'
+                ? t.searching
+                : image && !query.trim()
+                ? t.checkPlantHealth
+                : t.askBtn}
             </button>
             <button
               type="button"

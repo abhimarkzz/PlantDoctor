@@ -17,6 +17,33 @@ def list_knowledge_packs(
     return pack_service.list_packs_out()
 
 
+@router.get("/ai-model/metadata")
+def get_offline_model_metadata() -> Dict[str, Any]:
+    """Retrieves on-device ONNX plant classifier metadata and taxonomy."""
+    from pathlib import Path
+    import json
+    meta_path = Path(__file__).resolve().parent.parent / "models" / "artifacts" / "model_metadata.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="Model metadata not found.")
+    with open(meta_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@router.get("/ai-model/download")
+def download_offline_model():
+    """Streams the verified MobileNetV2 ONNX model binary for local onnxruntime-web execution."""
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+    model_path = Path(__file__).resolve().parent.parent / "models" / "artifacts" / "mobilenet_v2_plant_disease.onnx"
+    if not model_path.exists():
+        raise HTTPException(status_code=404, detail="Model binary not found.")
+    return FileResponse(
+        path=model_path,
+        media_type="application/octet-stream",
+        filename="mobilenet_v2_plant_disease.onnx",
+    )
+
+
 @router.get("/{pack_id}", response_model=KnowledgePackOut)
 def get_knowledge_pack(
     pack_id: str,
@@ -43,3 +70,4 @@ def download_knowledge_pack(
     if not payload:
         raise HTTPException(status_code=404, detail="Knowledge pack not found or payload unavailable.")
     return payload
+

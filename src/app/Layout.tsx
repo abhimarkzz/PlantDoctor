@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { NavBar } from '../components/NavBar';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -34,9 +34,18 @@ export function Layout() {
         </header>
 
         <ConnectionBanner />
-        <main className="flex-1 px-4 md:px-8 py-6 pb-24 md:pb-6 max-w-4xl w-full mx-auto">
+        <main className="flex-1 px-4 md:px-8 py-6 max-w-4xl w-full mx-auto">
           <Outlet />
         </main>
+        <footer className="px-4 md:px-8 py-6 pb-24 md:pb-6 border-t border-border text-xs text-muted-foreground">
+          <nav aria-label="Legal and information" className="flex flex-wrap gap-x-4 gap-y-2 max-w-4xl mx-auto">
+            <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/storage" className="hover:text-foreground transition-colors">Cookies &amp; Storage</Link>
+            <span className="ml-auto">Decision support — not a guaranteed diagnosis.</span>
+          </nav>
+        </footer>
       </div>
     </div>
   );
