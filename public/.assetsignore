@@ -1,0 +1,11 @@
+# Cloudflare Pages has a 25 MiB per-file upload limit.
+# onnxruntime-web's ESM references large WebGPU/JSPI wasm variants that this
+# app does NOT use (executionProviders: ['wasm'], numThreads: 1). Vite still
+# emits a hashed copy of the jsep wasm into assets/; the runtime loads the
+# plain wasm from /ort/ (set via ort.env.wasm.wasmPaths), so the bundled copy
+# is unused and safe to skip. Exclude it (and any oversized ort variants) so
+# the deploy passes.
+assets/ort-wasm-simd-threaded.jsep-*.wasm
+ort/ort-wasm-simd-threaded.jsep.wasm
+ort/ort-wasm-simd-threaded.asyncify.wasm
+ort/ort-wasm-simd-threaded.jspi.wasm

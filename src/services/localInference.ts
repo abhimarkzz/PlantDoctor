@@ -3,7 +3,10 @@
  * Runs completely locally inside the browser with ZERO remote network requests.
  */
 
-import * as ort from 'onnxruntime-web';
+// Import the wasm-only entry (not the default, which also bundles the large
+// WebGPU/JSEP wasm). We only use the 'wasm' execution provider, so this avoids
+// emitting a ~27 MiB asset that exceeds Cloudflare Pages' 25 MiB/file limit.
+import * as ort from 'onnxruntime-web/wasm';
 import { getModelArrayBuffer } from './offlineStorage';
 
 // Configure onnxruntime-web for maximum compatibility on mobile devices

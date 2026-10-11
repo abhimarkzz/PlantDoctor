@@ -228,7 +228,7 @@ export function LibraryPage() {
                 <Sparkles size={16} className="text-primary" aria-hidden="true" />
               </h2>
               <p className="text-xs text-muted-foreground">
-                MobileNetV2 ONNX · WebAssembly CPU / WebGPU runtime · IndexedDB
+                MobileNetV2 ONNX · WebAssembly CPU runtime · IndexedDB
               </p>
             </div>
           </div>
